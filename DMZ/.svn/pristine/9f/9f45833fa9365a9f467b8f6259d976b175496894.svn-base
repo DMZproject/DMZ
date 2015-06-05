@@ -1,0 +1,740 @@
+package DMZ.inputdata;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.net.URL;
+import java.util.ArrayList;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.table.TableModel;
+
+import weka.core.Capabilities;
+import weka.core.Instances;
+import weka.core.converters.AbstractFileLoader;
+import weka.core.converters.AbstractFileSaver;
+import weka.core.converters.ConverterUtils;
+import weka.core.converters.Loader;
+import weka.core.converters.SerializedInstancesLoader;
+import weka.core.converters.URLSourcedLoader;
+import weka.filters.Filter;
+import weka.gui.AttributeSelectionPanel;
+import weka.gui.AttributeSummaryPanel;
+import weka.gui.AttributeVisualizationPanel;
+import weka.gui.ConverterFileChooser;
+import weka.gui.GenericObjectEditor;
+import weka.gui.InstancesSummaryPanel;
+import weka.gui.LogPanel;
+import weka.gui.Logger;
+import weka.gui.PropertyDialog;
+import weka.gui.SysErrLog;
+import weka.gui.ViewerDialog;
+import weka.gui.explorer.Explorer;
+import weka.gui.explorer.ExplorerDefaults;
+import weka.gui.explorer.PreprocessPanel;
+import DMZ.gui.CenterPanel;
+import DMZ.gui.InputDataLabel;
+import DMZ.gui.ParentLabel;
+import DMZ.gui.RightPanel;
+import DMZ.visualize.*;
+
+public class InputData {
+	
+	
+	/** A thread for loading/saving instances from a file or URL */
+	  protected Thread ioThread;
+	 /** The file chooser for selecting data files */
+	  protected ConverterFileChooser m_FileChooser = new ConverterFileChooser(new File(ExplorerDefaults.getInitialDirectory()));
+	 /** The working instances */
+	  protected Instances instances;
+	
+	  
+	  /** Keeps track of undo points */
+	  protected File[] tempUndoFiles = new File[20]; // set number of undo ops here
+
+	  /** The next available slot for an undo point */
+	  protected int tempUndoIndex = 0;
+
+	  /** Click to revert back to the last saved point */
+	  protected JButton undoBut = new JButton("되돌리기");
+	  /** The message logger */
+	  protected Logger log = new SysErrLog();
+	  
+	  /** Displays simple stats on the working instances */
+	  protected InstancesSummaryPanel instSummaryPanel = new InstancesSummaryPanel();
+
+	  /** the parent frame */
+	  protected Explorer m_Explorer = null;
+	  
+	  /** Lets the user configure the filter */
+	  protected GenericObjectEditor m_FilterEditor = new GenericObjectEditor();
+	  
+	  
+	  protected String lastURL = "http://";
+	  JPanel openFilePanel = new JPanel();
+	  
+	  JButton openFileBtn  = new JButton("파일 열기");
+	  JButton openURLBtn  = new JButton("URL 열기");
+	  JButton deleteDataBtn = new JButton("데이터 지우기");
+	
+	  CenterPanel centerPanel;
+	  RightPanel rightPanel;
+	  
+	
+	  
+	  
+	  String openFileName;
+	  String filePath=null;
+	  ParentLabel la;
+	  
+	  Histogram histogram = new Histogram();
+	 
+	  public InputData(){
+		  	
+		  	openFilePanel.setLayout(null);
+			openFilePanel.setBounds(15,20,420,65);
+			
+			openFilePanel.setBorder(new TitledBorder("데이터 열기"));
+			
+			//속성값 받아오는 패널
+			instSummaryPanel.setBorder(BorderFactory.createTitledBorder("현재 데이터"));
+			instSummaryPanel.setBounds(15,90,420,90);
+			
+			openFileBtn.setBounds(15, 20, 120, 30);
+			openURLBtn.setBounds(150,20,120,30);
+		
+			
+			
+			openFileBtn.addActionListener(new ActionListener(){
+				public void actionPerformed(ActionEvent e) {
+				if(setInstancesFromFileQ())
+				{
+					 openFileBtn.setEnabled(false);
+					 openURLBtn.setEnabled(false);
+				}
+				}
+			});
+			openURLBtn.addActionListener(new ActionListener() {
+			      public void actionPerformed(ActionEvent e) {
+				if(setInstancesFromURLQ())
+				{
+					 openFileBtn.setEnabled(false);
+					 openURLBtn.setEnabled(false);
+				}
+			      }
+			    });
+		
+			openFilePanel.add(openFileBtn);
+			openFilePanel.add(openURLBtn);
+			
+			
+			
+	  }
+	  
+	  
+	  
+	  /**
+	   * Queries the user for a URL to load instances from, then loads the
+	   * instances in a background process. This is done in the IO
+	   * thread, and an error message is popped up if the IO thread is busy.
+	   */
+	  public boolean setInstancesFromURLQ() {
+	    
+	    if (ioThread == null) {
+	      try {
+		String urlName = (String) JOptionPane.showInputDialog(rightPanel,
+				"URL을 입력 하세요.",
+				"데이터 불러오기",
+				JOptionPane.QUESTION_MESSAGE,
+				null,
+				null,
+				lastURL);
+		if (urlName != null) {
+		  lastURL = urlName;
+		  URL url = new URL(urlName);
+		  try {
+		    addUndoPoint();
+		  } catch (Exception ignored) {}
+		  setInstancesFromURL(url);
+		  return true;
+		}
+	      } catch (Exception ex) {
+		ex.printStackTrace();
+		JOptionPane.showMessageDialog(rightPanel,
+					      "다음 URL에 문제가 있습니다.\n URL:"
+					      + ex.getMessage(),
+					      "데이터 불러오기",
+					      JOptionPane.ERROR_MESSAGE);
+	      }
+	    } else {
+	      JOptionPane.showMessageDialog(rightPanel,
+					    "현재 읽을 수 없습니다.\n"
+					    + "다른 I/O장치가 실행중입니다.",
+					    "데이터 불러오기",
+					    JOptionPane.WARNING_MESSAGE);
+	    }
+		return false;
+	  }
+	  
+	  /**
+	   * Loads instances from a URL.
+	   *
+	   * @param u the URL to load from.
+	   */
+	  public void setInstancesFromURL(final URL u) {
+
+	    if (ioThread == null) {
+	      ioThread = new Thread() {
+		@Override
+		public void run() {
+
+		  try {
+		    log.statusMessage("URL로부터 읽어오는중입니다..");
+		    AbstractFileLoader loader = ConverterUtils.getURLLoaderForFile(u.toString());
+		   
+		  
+		    if (loader == null)
+		      throw new Exception("다음 URL에서 적당한 Source를 찾을 수 없습니다.\n" + u);
+		    ((URLSourcedLoader) loader).setURL(u.toString());
+		    
+		    Instances inst = loader.getDataSet();
+		    setInstances(inst);
+		    
+		    
+		    //**************
+		    histogram.setInstances(inst);
+		   //*************
+		  
+		  
+		  
+		  } catch (Exception ex) {
+		    ex.printStackTrace();
+		    log.statusMessage("Problem reading " + u);
+		    JOptionPane.showMessageDialog(rightPanel,
+						  "다음 URL로부터 읽어올 수 없습니다.\n"
+						  + u + "\n"
+						  + ex.getMessage(),
+						  "인스턴스 불러오기",
+						  JOptionPane.ERROR_MESSAGE);
+		  }
+
+		  ioThread = null;
+		}
+	      };
+	     ioThread.setPriority(Thread.MIN_PRIORITY); // UI has most priority
+	      ioThread.start();
+	    } else {
+	      JOptionPane.showMessageDialog(rightPanel,
+					    "현재 읽을 수 없습니다.\n"
+					    + "다른 I/O장치가 사용중 입니다.",
+					    "인스턴스 불러오기",
+					    JOptionPane.WARNING_MESSAGE);
+	    }
+	  }
+	  
+	  /**
+	   * Queries the user for a file to load instances from, then loads the
+	   * instances in a background process. This is done in the IO
+	   * thread, and an error message is popped up if the IO thread is busy.
+	   */
+	 public boolean setInstancesFromFileQ() {
+		    
+		    if (ioThread == null) {
+		      int returnVal = m_FileChooser.showOpenDialog(rightPanel);
+		      if (returnVal == JFileChooser.APPROVE_OPTION) {
+			try {
+			  addUndoPoint();
+			}
+			catch (Exception ignored) {
+			  // ignored
+			}
+
+			if (m_FileChooser.getLoader() == null) {
+			  JOptionPane.showMessageDialog(rightPanel, "자동적으로 파일을 읽어올 수 없습니다. 하나를 선택해 주세요.","인스턴스 불러오",
+			      JOptionPane.ERROR_MESSAGE);
+			  converterQuery(m_FileChooser.getSelectedFile());
+			}
+			else {
+			  setInstancesFromFile(m_FileChooser.getLoader());
+			  setFilePath(m_FileChooser.getFilePath());
+			  this.la.setLabelFilePath(this.filePath);
+			  return true;
+			 
+			}
+			    
+		      }
+		    } else {
+		      JOptionPane.showMessageDialog(rightPanel,"현재 읽을 수 없습니다,\n" + "다른 I/O장치가 사용중입니다.", "인스턴스 불러오",  JOptionPane.WARNING_MESSAGE);
+		     
+		    }
+			return false;
+		    
+		    
+		  }
+	 
+	
+	 
+	  /**
+	   * Backs up the current state of the dataset, so the changes can be undone.
+	   * 
+	   * @throws Exception 	if an error occurs
+	   */
+	 public void setInstancesFromFile(String path){
+		 this.m_FileChooser.setFromFile(path);
+		 try {
+			setInstances(m_FileChooser.getLoader().getDataSet());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	 }
+	 public String getFilePath(){
+		 return this.filePath;
+	 }
+	 public void setFilePath(String path){
+		 this.filePath=path;
+	 }
+	 public void setLabel(ParentLabel la){
+		 this.la=la;
+	 }
+	 public ConverterFileChooser getFileChooser(){
+		 return this.m_FileChooser;
+	 }
+	  public void addUndoPoint() throws Exception {
+	    if (!ExplorerDefaults.get("enableUndo", "true").equalsIgnoreCase("true")) 
+	    { return; }
+	    
+	    if (instances != null) {
+	      // create temporary file
+	      File tempFile = File.createTempFile("weka", SerializedInstancesLoader.FILE_EXTENSION);
+	      tempFile.deleteOnExit();
+	      if (!ExplorerDefaults.get("undoDirectory", "%t").equalsIgnoreCase("%t")) {
+	        String dir = ExplorerDefaults.get("undoDirectory", "%t");
+	        File undoDir = new File(dir);
+	        if (undoDir.exists()) {
+	          String fileName = tempFile.getName();
+	          File newFile = new File(dir + File.separator + fileName);
+	          if (undoDir.canWrite()) {
+	            newFile.deleteOnExit();
+	            tempFile = newFile;
+	          } else {
+	            System.err.println("Explorer: it doesn't look like we have permission" +
+	            		" to write to the user-specified undo directory " +
+	            		"'" + dir + "'");
+	          }
+	        } else {
+	          System.err.println("Explorer: user-specified undo directory '" +
+	              dir + "' does not exist!");
+	        }
+	      }
+	    
+
+	      ObjectOutputStream oos = 
+		new ObjectOutputStream(
+		new BufferedOutputStream(
+		new FileOutputStream(tempFile)));
+	    
+	      oos.writeObject(instances);
+	      oos.flush();
+	      oos.close();
+
+	      // update undo file list
+	      if (tempUndoFiles[tempUndoIndex] != null) {
+		// remove undo points that are too old
+		tempUndoFiles[tempUndoIndex].delete();
+	      }
+	      tempUndoFiles[tempUndoIndex] = tempFile;
+	      if (++tempUndoIndex >= tempUndoFiles.length) {
+		// wrap pointer around
+		tempUndoIndex = 0;
+	      }
+
+	      undoBut.setEnabled(true);
+	    }
+	  }
+	  
+	 
+	  
+	  /**
+	   * edits the current instances object in the viewer 
+	   */
+	  public void edit() {
+	    ViewerDialog        dialog;
+	    int                 result;
+	    Instances           copy;
+	    Instances           newInstances;
+	    
+	    final int classIndex = histogram.getAttVisualizePanel().getColoringIndex();
+	    copy   = new Instances(instances);
+	    copy.setClassIndex(classIndex);
+	    dialog = new ViewerDialog(null);
+	    result = dialog.showDialog(copy);
+	    if (result == ViewerDialog.APPROVE_OPTION) {
+	    	
+	      try {
+	        addUndoPoint();
+	      }
+	      catch (Exception e) {
+	        e.printStackTrace();
+	      }
+	      // if class was not set before, reset it again after use of filter
+	      newInstances = dialog.getInstances();
+	      if (instances.classIndex() < 0)
+	        newInstances.setClassIndex(-1);
+	      setInstances(newInstances);
+	    }
+	  }
+	
+	
+	
+	  
+	  /**
+	   * Pops up generic object editor with list of conversion filters
+	   *
+	   * @param f the File
+	   */
+	  private void converterQuery(final File f) {
+	    final GenericObjectEditor convEd = new GenericObjectEditor(true);
+
+	    try {
+	      convEd.setClassType(weka.core.converters.Loader.class);
+	      convEd.setValue(new weka.core.converters.CSVLoader());
+	      ((GenericObjectEditor.GOEPanel)convEd.getCustomEditor())
+		.addOkListener(new ActionListener() {
+		    public void actionPerformed(ActionEvent e) {
+		      tryConverter((Loader)convEd.getValue(), f);
+		    }
+		  });
+	    } catch (Exception ex) {
+	    }
+
+	    PropertyDialog pd;
+	    if (PropertyDialog.getParentDialog(rightPanel) != null)
+	      pd = new PropertyDialog(PropertyDialog.getParentDialog(rightPanel), convEd, 100, 100);
+	    else
+	      pd = new PropertyDialog(PropertyDialog.getParentFrame(rightPanel), convEd, 100, 100);
+	    pd.setVisible(true);
+	  }
+	  
+	
+	  
+	  
+	  
+	  /**
+	   * Applies the selected converter
+	   *
+	   * @param cnv the converter to apply to the input file
+	   * @param f the input file
+	   */
+	  private void tryConverter(final Loader cnv, final File f) {
+
+	    if (ioThread == null) {
+	      ioThread = new Thread() {
+		  @Override
+		  public void run() {
+		    try {
+		      cnv.setSource(f);
+		      Instances inst = cnv.getDataSet();
+		      setInstances(inst);
+		    } catch (Exception ex) {
+		      log.statusMessage(cnv.getClass().getName()+" 불러오기 실패 "
+					 +f.getName());
+		      JOptionPane.showMessageDialog(rightPanel,
+						    cnv.getClass().getName()+" 불러오기 실패 '"
+						    + f.getName() + "'.\n"
+						    + "원인:\n" + ex.getMessage(),
+						    "파일 변환",
+						    JOptionPane.ERROR_MESSAGE);
+		      ioThread = null;
+		      converterQuery(f);
+		    }
+		    ioThread = null;
+		  }
+		};
+	      ioThread.setPriority(Thread.MIN_PRIORITY); // UI has most priority
+	      ioThread.start();
+	    }
+	  }
+	  
+	  
+	  
+	  
+
+	  /**
+	   * Tells the panel to use a new base set of instances.
+	   *
+	   * @param inst a set of Instances
+	   */
+	  public void setInstances(Instances inst) {
+
+	    instances = inst;
+	    try {
+	      Runnable r = new Runnable() {
+		public void run() {
+		  boolean first =  (histogram.getAttPanel().getTableModel() == null);
+		  
+		  instSummaryPanel.setInstances(instances);
+		  histogram.getAttPanel().setInstances(instances);
+		  ///**
+		  histogram.setInstances(instances);
+		  //**
+		  if (first) {
+		    TableModel model = histogram.getAttPanel().getTableModel(); 
+		    model.addTableModelListener(new TableModelListener() {
+		      public void tableChanged(TableModelEvent e) {
+		        if (histogram.getAttPanel().getSelectedAttributes() != null &&
+		        		histogram.getAttPanel().getSelectedAttributes().length > 0) {
+		            histogram.getRemoveBtn().setEnabled(true);
+		        } else {
+		        	histogram.getRemoveBtn().setEnabled(false);
+		        }
+		      }
+		    });
+		  }
+		  //히스토그램, 수정된 패널 	불러오기
+		  histogram.getAttSummaryPanel().setInstances(instances);
+		  //히스토그램, 막대그래프 불러오기
+		  histogram.getAttVisualizePanel().setInstances(instances);
+
+		  // select the first attribute in the list
+		  //히스토그램 값 초기화
+		  histogram.getAttPanel().getSelectionModel().setSelectionInterval(0, 0);
+		  histogram.getAttSummaryPanel().setAttribute(0);
+		  histogram.getAttVisualizePanel().setAttribute(0);
+
+		 // m_ApplyFilterBut.setEnabled(true);
+
+		  log.logMessage("Base relation is now " + instances.relationName()+ " (" + instances.numInstances()  + " instances)");
+		  log.statusMessage("확인");
+		  
+
+		 
+		  
+		  // Fire a propertychange event
+		//  m_Support.firePropertyChange("", null, null);
+		  
+		  // notify GOEs about change
+/*	  try {
+		    // get rid of old filter settings
+		//    getExplorer().notifyCapabilitiesFilterListener(null);
+
+		    int oldIndex = instances.classIndex();
+		    instances.setClassIndex(histogram.getAttVisualizePanel().getColorBox().getSelectedIndex() - 1);
+		    
+		    // send new ones
+		    if (ExplorerDefaults.getInitGenericObjectEditorFilter())
+		      getExplorer().notifyCapabilitiesFilterListener(
+			  Capabilities.forInstances(instances));
+		    else
+		      getExplorer().notifyCapabilitiesFilterListener(
+			  Capabilities.forInstances(new Instances(instances, 0)));
+
+		    instances.setClassIndex(oldIndex);
+		  }
+		  catch (Exception e) {
+		    e.printStackTrace();
+		    log.logMessage(e.toString());
+		  }*/
+		  
+		}
+	      };
+	      if (SwingUtilities.isEventDispatchThread()) {
+		r.run();
+	      } else {
+		SwingUtilities.invokeAndWait(r);
+	      }
+	    } catch (Exception ex) {
+	      ex.printStackTrace();
+	      JOptionPane.showMessageDialog(rightPanel,
+					    "Problem setting base instances:\n"
+					    + ex,
+					    "Instances",
+					    JOptionPane.ERROR_MESSAGE);
+	    }
+	  }
+
+	  
+	  /**
+	   * Gets the working set of instances.
+	   *
+	   * @return the working instances
+	   */
+	  public Instances getInstances() {
+
+	    return instances;
+	  }
+	  
+	  
+	  
+
+
+	  /**
+	   * Loads results from a set of instances retrieved with the supplied loader. 
+	   * This is started in the IO thread, and a dialog is popped up
+	   * if there's a problem.
+	   *
+	   * @param loader	the loader to use
+	   */
+	  public void setInstancesFromFile(final AbstractFileLoader loader) {
+	      
+	    if (ioThread == null) {
+	      ioThread = new Thread() {
+		@Override
+		public void run() {
+		  try {
+		    log.statusMessage("파일로부터 불러오기 ");
+		    Instances inst = loader.getDataSet();
+		    //*********************************************************
+		   
+		    histogram.setInstances(inst);
+		    
+		 
+		    //*********************************************************
+		    //*********************************************************
+		    setInstances(inst);
+		
+		  }
+		  catch (Exception ex) {
+		    log.statusMessage("File '" + loader.retrieveFile() + "' not recognised as an '"+ loader.getFileDescription() + "' file.");
+		    ioThread = null;
+		    if (JOptionPane.showOptionDialog(rightPanel,
+						     "File '" + loader.retrieveFile()
+						     + "' not recognised as an '"
+						     + loader.getFileDescription() 
+						     + "' file.\n"
+						     + "원인:\n" + ex.toString(),
+						     "Load Instances",
+						     0,
+						     JOptionPane.ERROR_MESSAGE,
+						     null,
+						     new String[] {"확인", "Use Converter"},
+						     null) == 1) {
+		    
+		      converterQuery(loader.retrieveFile());
+		    }
+		  }
+		  ioThread = null;
+		}
+	      };
+	      ioThread.setPriority(Thread.MIN_PRIORITY); // UI has most priority
+	      ioThread.start();
+	    } else {
+	      JOptionPane.showMessageDialog(rightPanel,
+					    "Can't load at this time,\n"
+					    + "currently busy with other IO",
+					    "Load Instances",
+					    JOptionPane.WARNING_MESSAGE);
+	    }
+	  }
+	  
+	  
+	  /**
+	   * Queries the user for a file to save instances as, then saves the
+	   * instances in a background process. This is done in the IO
+	   * thread, and an error message is popped up if the IO thread is busy.
+	   */
+	  public void saveWorkingInstancesToFileQ() {
+	    
+	    if (ioThread == null) {
+	   //   m_FileChooser.setCapabilitiesFilter(m_FilterEditor.getCapabilitiesFilter());
+	   //   m_FileChooser.setAcceptAllFileFilterUsed(false);
+	      int returnVal = m_FileChooser.showSaveDialog(rightPanel);
+	      if (returnVal == JFileChooser.APPROVE_OPTION) {
+		Instances inst = new Instances(instances);
+		inst.setClassIndex(histogram.getAttVisualizePanel().getColoringIndex());
+		saveInstancesToFile(m_FileChooser.getSaver(), inst);
+	      }
+	      FileFilter temp = m_FileChooser.getFileFilter();
+	      m_FileChooser.setAcceptAllFileFilterUsed(true);
+	      m_FileChooser.setFileFilter(temp);
+	    }
+	    else {
+	      JOptionPane.showMessageDialog(rightPanel,"현재 저장할 수 없습니다,\n" + "다른 I/O장치가 사용중 입니다.", "인스턴스 저장하기",
+					    JOptionPane.WARNING_MESSAGE);
+	    }
+	  }
+	  
+	  
+	  
+	  /**
+	   * saves the data with the specified saver
+	   * 
+	   * @param saver	the saver to use for storing the data
+	   * @param inst	the data to save
+	   */
+	  public void saveInstancesToFile(final AbstractFileSaver saver, final Instances inst) {
+	    if (ioThread == null) {
+	      ioThread = new Thread() {
+		  @Override
+		  public void run() {
+		    try {
+		      log.statusMessage("Saving to file...");
+
+		      saver.setInstances(inst);
+		      saver.writeBatch();
+		      
+		      log.statusMessage("확인");
+		    }
+		    catch (Exception ex) {
+		      ex.printStackTrace();
+		      log.logMessage(ex.getMessage());
+		    }
+		    ioThread = null;
+		  }
+		};
+	      ioThread.setPriority(Thread.MIN_PRIORITY); // UI has most priority
+	      ioThread.start();
+	    }
+	    
+	    else {
+	      JOptionPane.showMessageDialog(rightPanel,"현재 저장 할 수 없습니다,\n"+ "다른 I/O장치가 사용중 입니다.","Saving instances",JOptionPane.WARNING_MESSAGE);
+	    } 
+	  }
+	  public Explorer getExplorer() {
+		    return m_Explorer;
+		  }
+		  
+	  
+	  public void setRightPanel(RightPanel rightPanel)
+	  {
+		  this.rightPanel = rightPanel;
+	  }
+	  
+	  public JPanel getOpenFilePanel()
+	  {
+		  return openFilePanel;
+	  }
+	  
+	  public InstancesSummaryPanel getInstancesSummaryPanel()
+	  {
+		  return instSummaryPanel; 
+	  }
+	  
+	  public Histogram getHistogram()
+	  {
+		  return histogram;
+	  }
+	
+	  public String getOpenFileName()
+	  {
+		  return openFileName;
+	  }
+	  
+	  
+	  
+}

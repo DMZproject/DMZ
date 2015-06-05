@@ -1,0 +1,41 @@
+package DMZ.gui;
+
+import java.awt.Image;
+
+import javax.swing.ImageIcon;
+import javax.swing.JPanel;
+
+import DMZ.inputdata.InputData;
+
+public class SaveDataLabel extends OnlyInputLabel {
+
+
+	boolean selected = false;
+	int colorType = 1;
+	String type = "save";
+	ImageIcon enter_saveImageIcon = new ImageIcon("IconImage/enter_saveImageIcon.PNG");
+	
+	SaveDataLabel() {
+		enter_saveImageIcon = new ImageIcon(enter_saveImageIcon.getImage().getScaledInstance(70, 66, Image.SCALE_SMOOTH));
+		setIcon(enter_saveImageIcon);
+	}
+
+	SaveDataLabel(String name) {
+		super(name);
+	}
+
+	public int getColorType(){
+		return colorType;
+	}
+	public void run() {
+		inputdata.saveWorkingInstancesToFileQ();
+	//	new RightTabbedPane(rightPanel,(JPanel)inputData.getHistogram().getHistogramPanel(), (JPanel)inputData.getInstancesSummaryPanel(), "filter");
+	//	rightPanel.addTabbedPane((JPanel)inputData.getHistogram().getHistogramPanel(), (JPanel)inputData.getInstancesSummaryPanel(), "filter");
+	}
+
+	@Override
+	public String getType() {
+		return type;
+	}
+
+}

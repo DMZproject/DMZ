@@ -1,0 +1,68 @@
+package DMZ.gui;
+
+import java.util.ArrayList;
+
+import DMZ.inputdata.InputData;
+
+
+
+/*
+ * 
+ * 데이터 입력 라벨 
+ * 입력은 없고 출력 만 여러개 
+ * 출력을 toLabelList에 저장 
+ * 
+ * 
+ */
+public class InputDataLabel extends OnlyOutputLabel {
+
+   InputData inputData = new InputData();
+   String type="open";
+   ParentLabel toLabel;
+   
+   ArrayList<ParentLabel> toLabelList = new ArrayList<ParentLabel>();
+   
+
+   
+   boolean selected = false;
+
+   InputDataLabel() {
+
+   }
+
+   InputDataLabel(String name) {
+      super(name);
+   }
+
+   InputDataLabel(String name, String type) {
+      super(name, type);
+   }
+
+   public void setType(String type) {
+      super.setType(type);
+   }
+
+
+   public void setInputData(InputData inputData) {
+      this.inputData = inputData;
+
+   }
+   
+   public InputData getInputData() {
+      return inputData;
+   }
+   
+   public ArrayList<ParentLabel> getToLabelList()
+   {
+	   return toLabelList;
+   }
+   
+   public void addToLabel(ParentLabel toLabel)
+   {
+	   toLabelList.add(toLabel);
+   }
+ 
+   public void run(){
+      rightPanel.addOpenFilePanel(this);
+   }
+}

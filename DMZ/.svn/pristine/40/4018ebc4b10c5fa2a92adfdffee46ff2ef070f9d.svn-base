@@ -1,0 +1,60 @@
+package DMZ.gui;
+
+import javax.swing.JLabel;
+
+import DMZ.inputdata.InputData;
+
+
+public class SaveDataLabel extends OnlyInputLabel {
+
+	InputData inputData;
+	
+	
+	ParentLabel fromLabel;
+
+	boolean selected = false;
+
+	SaveDataLabel() {
+
+	}
+
+	SaveDataLabel(String name) {
+		super(name);
+	}
+
+	SaveDataLabel(String name, String type) {
+		super(name, type);
+	}
+
+	public void setType(String type) {
+		super.setType(type);
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setInputData(InputData inputData) {
+		this.inputData=inputData;
+	}
+
+	public InputData getInputData() {
+		return inputData;
+	}
+	
+	public void setFromLabel(ParentLabel fromLabel)
+	{
+		this.fromLabel = fromLabel;
+	}
+	
+	public ParentLabel getFromLabel()
+	{
+		return fromLabel;
+	}
+	
+	public void run(){
+	
+		
+		
+	}
+}

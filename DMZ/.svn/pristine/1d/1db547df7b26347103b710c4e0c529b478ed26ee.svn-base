@@ -1,0 +1,247 @@
+package DMZ.gui;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Graphics;
+import java.awt.GridLayout;
+import java.awt.Image;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Random;
+
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.border.EtchedBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+public class Project extends JFrame{
+	JPanel ProjectPanel=new JPanel();
+	
+	JLabel nla=new JLabel();
+	JLabel ola=new JLabel();
+	JLabel tutorialLabel=new JLabel();
+	JLabel homepageLabel=new JLabel();
+	JLabel manLabel=new JLabel();
+	JLabel tmpLabel=new JLabel();
+	
+	
+
+	ImageIcon nProjectIcon = new ImageIcon("IconImage/newProjectIcon.png");
+	ImageIcon oProjectIcon = new ImageIcon("IconImage/openProjectIcon.png");
+	ImageIcon helpIcon = new ImageIcon("IconImage/helpIcon.png");
+	ImageIcon infoIcon = new ImageIcon("IconImage/infoIcon.png");
+	
+	
+	ImageIcon enter_nProjectIcon = new ImageIcon("IconImage/enter_newProjectIcon.png");
+	ImageIcon enter_oProjectIcon = new ImageIcon("IconImage/enter_openProjectIcon.png");
+	ImageIcon enter_helpIcon = new ImageIcon("IconImage/enter_helpIcon.png");
+	ImageIcon enter_infoIcon = new ImageIcon("IconImage/enter_infoIcon.png");
+	static MainFrame mf;
+	
+	int x=100;
+	int y=91;
+	
+	Project(){
+		super("Project");
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		getContentPane().setLayout(new BorderLayout());
+		
+		
+		
+		
+
+		nProjectIcon = new ImageIcon(nProjectIcon.getImage().getScaledInstance(x,y, Image.SCALE_SMOOTH));
+		oProjectIcon = new ImageIcon(oProjectIcon.getImage().getScaledInstance(x, y, Image.SCALE_SMOOTH));
+		helpIcon = new ImageIcon(helpIcon.getImage().getScaledInstance(x, y, Image.SCALE_SMOOTH));
+		infoIcon = new ImageIcon(infoIcon.getImage().getScaledInstance(x, y, Image.SCALE_SMOOTH));
+		
+		
+		 enter_nProjectIcon = new ImageIcon(enter_nProjectIcon.getImage().getScaledInstance(x,y, Image.SCALE_SMOOTH));
+		enter_oProjectIcon = new ImageIcon(enter_oProjectIcon.getImage().getScaledInstance(x,y, Image.SCALE_SMOOTH));
+		enter_helpIcon = new ImageIcon(enter_helpIcon.getImage().getScaledInstance(x,y, Image.SCALE_SMOOTH));
+		enter_infoIcon = new ImageIcon(enter_infoIcon.getImage().getScaledInstance(x,y, Image.SCALE_SMOOTH));
+		
+		nla.setIcon(nProjectIcon);
+		ola.setIcon(oProjectIcon);
+		tutorialLabel.setIcon(helpIcon);
+		homepageLabel.setIcon(infoIcon);
+
+		
+		
+		nla.addMouseListener(new MouseAdapter() {
+		      @Override
+		      public void mouseClicked(MouseEvent e) {
+		    	  // new MainFrame(null);
+		    	  mf.setEnabled(true); 
+		    	  dispose();
+		    	   
+		      }
+		      public void mouseEntered(MouseEvent e)
+		      {
+		    	  nla.setIcon(enter_nProjectIcon);
+		      }
+		      
+		      public void mouseExited(MouseEvent e)
+		      {
+		    	  nla.setIcon(nProjectIcon);
+		      }
+		    });
+		
+		
+		
+		ola.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				JFileChooser chooser=new JFileChooser();
+				FileNameExtensionFilter filter= new FileNameExtensionFilter("xml","xml");
+				chooser.setFileFilter(filter);
+				int ret=chooser.showOpenDialog(null);
+				String pathName;
+				String fileName;
+
+				if(ret==JFileChooser.APPROVE_OPTION){
+					pathName=chooser.getSelectedFile().getPath();
+					fileName=chooser.getSelectedFile().getName();	
+				}
+				else{
+					System.out.println("file open error");
+					return ;
+				}
+				mf.setEnabled(true);
+				System.out.println(pathName);
+				mf.setOpenProject(pathName);
+				dispose();
+				
+
+			}
+			
+			  public void mouseEntered(MouseEvent e)
+		      {
+		    	  ola.setIcon(enter_oProjectIcon);
+		      }
+		      
+		      public void mouseExited(MouseEvent e)
+		      {
+		    	 ola.setIcon(oProjectIcon);
+		      }
+			
+		});
+		tutorialLabel.addMouseListener(new MouseAdapter() {
+		      @Override
+		      public void mouseClicked(MouseEvent e) {
+		    	  // new MainFrame(null);
+		    	  try {
+						Runtime rt = Runtime.getRuntime();
+						rt.exec("explorer http://ec2-52-68-241-198.ap-northeast-1.compute.amazonaws.com/WEB/home.html");
+					} catch (Exception e1) {
+					e1.printStackTrace();
+					}
+		    	   
+		      }
+		      
+		      public void mouseEntered(MouseEvent e)
+		      {
+		    	  tutorialLabel.setIcon(enter_helpIcon);
+		      }
+		      
+		      public void mouseExited(MouseEvent e)
+		      {
+		    	  tutorialLabel.setIcon(helpIcon);
+		      }
+		    });
+		homepageLabel.addMouseListener(new MouseAdapter() {
+		      @Override
+		      public void mouseClicked(MouseEvent e) {
+		    	  // new MainFrame(null);
+		    	  ImageIcon img = new ImageIcon("IconImage/infoImage.png");
+		  		final Image img1 = img.getImage();
+		  		 JFrame jf = new JFrame("정보");
+		  		 JPanel jp = new JPanel(){
+		  			 public void paintComponent(Graphics g)
+		  			 {
+		  				 super.paintComponent(g);
+		  				 g.drawImage(img1, 0, 0, null);
+		  				 
+		  			 }
+		  		 };
+		  		
+		  		
+		  	     jf.getContentPane().add(jp,BorderLayout.CENTER);
+		  	     jf.pack();
+		  	     jf.setLocation(250, 250);
+		  	     jf.setSize(700, 500);
+		  	     jf.setVisible(true);
+		    	   
+		      }
+		      
+		      public void mouseEntered(MouseEvent e)
+		      {
+		    	  homepageLabel.setIcon(enter_infoIcon);
+		      }
+		      
+		      public void mouseExited(MouseEvent e)
+		      {
+		    	  homepageLabel.setIcon(infoIcon);
+		      }
+		    });
+		
+		
+		ProjectPanel.setLayout(new GridLayout(1,4));
+		nla.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+		ola.setBorder(BorderFactory.createEmptyBorder(10,10, 10, 10));
+		tutorialLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+		homepageLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+		
+		
+		ProjectPanel.add(nla);
+		ProjectPanel.add(ola);
+		ProjectPanel.add(tutorialLabel);
+		ProjectPanel.add(homepageLabel);
+
+		
+		
+		
+		ProjectPanel.setBorder(new EtchedBorder());
+		ProjectPanel.setBackground(Color.white);
+		ProjectPanel.setPreferredSize(new Dimension(500,150));
+		
+		getContentPane().add(ProjectPanel,BorderLayout.CENTER);
+		pack();
+		setLocationRelativeTo(mf);
+		setVisible(true);
+		
+	}
+	
+	public void newProject(){
+		
+	}
+	public void openProject(){
+		
+	}
+	
+	
+	public static void main(String[] args)
+	{
+		Random rand = new Random();
+		int random = rand.nextInt(14)+1;
+		weka.gui.SplashWindow.splash(ClassLoader.
+				getSystemResource("DMZ/ImageIcon/"+random+".png"));
+
+		mf = new MainFrame();
+		mf.setEnabled(false);
+		new Project();
+		
+		weka.gui.SplashWindow.disposeSplash();
+		
+		
+	}
+	
+
+}

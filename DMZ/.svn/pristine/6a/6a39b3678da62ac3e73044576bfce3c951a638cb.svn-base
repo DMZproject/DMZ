@@ -1,0 +1,22 @@
+package DMZ.gui;
+
+public abstract class OnlyOutputLabel extends ParentLabel {
+	
+	final int labelType = 1;
+	
+	OnlyOutputLabel() {
+	}
+	
+	OnlyOutputLabel(String name) {
+		super(name);
+	}
+
+	OnlyOutputLabel(String name, String type) {
+		super(name,type);
+	}
+	
+	public int getLabelType(){
+		return labelType;
+	}
+	public abstract void run();
+}

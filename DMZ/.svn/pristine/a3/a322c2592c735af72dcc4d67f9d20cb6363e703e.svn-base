@@ -1,0 +1,285 @@
+package DMZ.gui;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.util.ArrayList;
+
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.border.SoftBevelBorder;
+
+import DMZ.xml.XmlLabel;
+import DMZ.xml.XmlLabelList;
+
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.xml.DomDriver;
+
+
+public class MainFrame extends JFrame {
+
+	//UndoRedo
+
+	//좌측  패널 
+	LeftPanel leftPanel = new LeftPanel(); 
+	//센터 패널 
+	CenterPanel centerPanel = new CenterPanel();
+	//우측 패널
+	RightPanel rightPanel = new RightPanel();
+
+
+	String spath="/Users/leejaeho/Desktop/xxxmll.xml";
+
+	//   LogPanel logPanel = new LogPanel(new WekaTaskMonitor());
+
+	MainFrame()
+	{
+
+
+
+		super("Data Mining Zoom");
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		getContentPane().setLayout(new BorderLayout());
+
+		//좌측 패널 구성
+		LineBorder line = new LineBorder(new Color(189,226,231), 8, true);
+		SoftBevelBorder softbevel = new SoftBevelBorder(SoftBevelBorder.RAISED);
+
+
+
+
+		leftPanel.setBorder(new CompoundBorder(line, softbevel));
+		leftPanel.setBackground(Color.white);
+		leftPanel.setPreferredSize(new Dimension(280,800));
+		leftPanel.setRightPanel(rightPanel);
+
+
+
+
+		//센터 패널
+		centerPanel.setLayout(null);
+		centerPanel.setBorder(new EtchedBorder());
+		//centerPanel.setPreferredSize(new Dimension(700,800));
+
+		//우측 패널
+
+		rightPanel.setBorder(new EtchedBorder());
+		rightPanel.setPreferredSize(new Dimension(440,800));
+
+
+
+		leftPanel.setCenterPanel(centerPanel);
+		centerPanel.setRightPanel(rightPanel);
+		centerPanel.setPreferredSize(new Dimension(1000,1000));
+		JScrollPane centerScrollPane = new JScrollPane(centerPanel);
+
+		centerPanel.addMouseListener(new CenterPanelClickListener());
+
+
+
+
+
+
+
+		add(leftPanel,BorderLayout.WEST);
+		add(centerScrollPane,BorderLayout.CENTER);
+		add(rightPanel,BorderLayout.EAST);
+		//add(logPanel, BorderLayout.SOUTH);
+		createMenu();
+
+
+		try{
+			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+			SwingUtilities.updateComponentTreeUI(this);
+		}catch (Exception e){
+
+		}
+		//setResizable(false);
+		setSize(1400,900);
+		setVisible(true);
+
+
+
+	}/*
+	void addLogPanel(){
+
+		 String date = (new SimpleDateFormat("EEEE, d MMMM yyyy")).format(new Date());
+		    logPanel.logMessage("Weka Explorer");
+		    logPanel.logMessage("(c) " + Copyright.getFromYear() + "-"
+		      + Copyright.getToYear() + " " + Copyright.getOwner() + ", "
+		      + Copyright.getAddress());
+		    logPanel.logMessage("web: " + Copyright.getURL());
+		    logPanel.logMessage("Started on " + date);
+		    logPanel.statusMessage("Welcome to the Weka Explorer");
+
+
+	}*/
+
+	class CenterPanelClickListener implements MouseListener{
+
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			// TODO Auto-generated method stub
+			rightPanel.removeAll();
+			repaint();
+		}
+
+		@Override
+		public void mouseEntered(MouseEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void mouseExited(MouseEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void mousePressed(MouseEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+
+	}
+	void createMenu(){
+		JMenuItem open=new JMenuItem("열기");
+		JMenuItem save=new JMenuItem("저장");
+		JMenuItem newProj=new JMenuItem("새로 만들기");
+
+		JMenuBar menuBar = new JMenuBar();
+
+		JMenu projectMenu = new JMenu("프로젝트");
+
+		JMenu editMenu = new JMenu("수정");
+		JMenuItem undo = new JMenuItem("Undo");
+		JMenuItem redo = new JMenuItem("Redo");
+
+		open.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				openXML();
+			}
+		});
+
+		save.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				saveXML();
+			}
+		});
+
+		undo.addActionListener(new ActionListener(){
+			ParentLabel pl;
+			public void actionPerformed(ActionEvent e){
+				pl = (ParentLabel) centerPanel.getUndoRedoStack().peek();
+				centerPanel.getUndoRedoStack().undo();
+				System.out.println(centerPanel.getUndoRedoStack().size());
+				pl.setVisible(false);
+
+			}
+
+		});
+
+		redo.addActionListener(new ActionListener(){
+			ParentLabel pl;
+			public void actionPerformed(ActionEvent e){
+				centerPanel.getUndoRedoStack().redo();
+				pl = (ParentLabel) centerPanel.getUndoRedoStack().peek();
+				pl.setVisible(true);
+			}
+
+		});
+		editMenu.add(undo);
+		editMenu.add(redo);
+
+
+		projectMenu.add(newProj);
+		projectMenu.add(open);
+		projectMenu.addSeparator(); 
+		projectMenu.add(save);
+		projectMenu.add(new JMenuItem("다른이름으로 저장"));
+		menuBar.add(projectMenu);
+		menuBar.add(editMenu);
+
+
+		// 메뉴바를 프레임에 삽입
+		setJMenuBar(menuBar);
+	}
+	public void saveXML(){
+		XmlLabelList save_List=new XmlLabelList();
+		ArrayList<ParentLabel> tmpList=this.centerPanel.getList();
+		for(int i=0; i<tmpList.size();i++){
+			Point p=new Point(tmpList.get(i).getLocation());
+			XmlLabel xla=new XmlLabel();
+			xla.setXY(p.x,p.y);
+			xla.setType(tmpList.get(i).getType());
+			save_List.add(xla);
+		}
+		XStream xs = new XStream(new DomDriver());
+
+		xs.alias("label", XmlLabel.class);
+		xs.alias("labels", XmlLabelList.class);
+		xs.addImplicitCollection(XmlLabelList.class, "x_List");
+
+		try {
+			FileOutputStream fs = new FileOutputStream(spath);
+			xs.toXML(save_List, fs);
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		}
+
+
+	}
+	public void openXML(){
+
+
+
+		XmlLabelList open_List=new XmlLabelList();
+		XStream xs = new XStream(new DomDriver());
+		try {
+
+			FileInputStream fis = new FileInputStream(spath);
+			xs.alias("label", XmlLabel.class);
+			xs.alias("labels", XmlLabelList.class);
+			xs.addImplicitCollection(XmlLabelList.class, "x_List");
+
+
+			xs.fromXML(fis,open_List);
+
+			System.out.println(fis.toString());
+			System.out.println(open_List.getXmlLabelList().size());
+
+
+		} catch (FileNotFoundException ex) {
+			ex.printStackTrace();
+		}
+
+
+	}
+	public static void main(String[] args)
+	{
+		new MainFrame();
+	}
+}

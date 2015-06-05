@@ -1,0 +1,34 @@
+package DMZ.gui;
+
+import java.util.ArrayList;
+
+import DMZ.inputdata.InputData;
+
+public class EditDataLabel extends BothLabel {
+
+	InputData inputData;
+	boolean selected = false;
+
+	EditDataLabel() {
+
+	}
+
+	EditDataLabel(String name) {
+		super(name);
+	}
+
+
+
+	public void setInputData(InputData inputData) {
+		this.inputData = inputData;
+	}
+
+	public InputData getInputData() {
+		return inputData;
+	}
+
+	public void run() {
+		inputData.edit();
+	}
+
+}

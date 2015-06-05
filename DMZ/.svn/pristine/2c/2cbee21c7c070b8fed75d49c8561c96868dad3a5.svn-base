@@ -1,0 +1,354 @@
+﻿package DMZ.gui;
+
+import DMZ.inputdata.*;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.table.TableModel;
+
+import DMZ.inputdata.InputData;
+import DMZ.visualize.Histogram;
+import weka.core.Attribute;
+import weka.core.Instances;
+import weka.core.converters.AbstractFileLoader;
+import weka.core.converters.AbstractFileSaver;
+import weka.core.converters.Loader;
+import weka.core.converters.SerializedInstancesLoader;
+import weka.filters.unsupervised.attribute.Remove;
+import weka.gui.AttributeSelectionPanel;
+import weka.gui.AttributeSummaryPanel;
+import weka.gui.AttributeVisualizationPanel;
+import weka.gui.ConverterFileChooser;
+import weka.gui.GenericObjectEditor;
+import weka.gui.InstancesSummaryPanel;
+import weka.gui.LogPanel;
+import weka.gui.Logger;
+import weka.gui.PropertyDialog;
+import weka.gui.SysErrLog;
+import weka.gui.TaskLogger;
+import weka.gui.ViewerDialog;
+import weka.gui.explorer.AssociationsPanel;
+import weka.gui.explorer.ClassifierPanel;
+import weka.gui.explorer.ClustererPanel;
+import weka.gui.explorer.ExplorerDefaults;
+import weka.gui.explorer.PreprocessPanel;
+import weka.gui.visualize.PlotData2D;
+import weka.gui.visualize.VisualizePanel;
+import weka.gui.visualize.VisualizePanel2;
+
+public class RightPanel extends JPanel {
+
+	JPanel openFilePanel;
+	JPanel instSummaryPanel;
+	JPanel histogramPanel;
+	AssociationsPanel sp;
+	PropertyDialog pd;
+	RightTabbedPane tp;
+	int AssociationLabelCount=0;
+	int ClusterLabelCount=0;
+	int ClassifyLabelCount=0;
+	ArrayList<AssociationsPanel> sp_list=new ArrayList<AssociationsPanel>();
+	ClustererPanel cp;
+	ArrayList<ClustererPanel> cp_list=new ArrayList<ClustererPanel>();
+	ClassifierPanel fp;
+	ArrayList<ClassifierPanel> fp_list=new ArrayList<ClassifierPanel>();
+	public int associationCheck=0;
+	public int clusterCheck=0;
+	public int classifyCheck=0;
+
+
+	RightPanel() {
+
+	}
+
+	void addOpenFilePanel(ParentLabel la) {
+
+		removeAll();
+
+		openFilePanel = la.getInputData().getOpenFilePanel();
+		instSummaryPanel = la.getInputData().getInstancesSummaryPanel();
+
+		openFilePanel.setVisible(true);
+		instSummaryPanel.setVisible(true);
+
+		setLayout(null);
+
+		add(openFilePanel);
+		add(instSummaryPanel);
+
+		validate();
+		repaint();
+
+	}
+
+	void addHistogramPanel(ParentLabel histogramLabel) {
+		removeAll();
+
+		histogramPanel = histogramLabel.getInputData().getHistogram().getHistogramPanel();
+		histogramPanel.setVisible(true);
+
+		setLayout(new BorderLayout());
+
+		add(histogramPanel);
+
+		validate();
+		repaint();
+
+	}
+
+
+	void addScatterPlot(ParentLabel la){
+		int[] m_selectedAttribs;
+		Instances m_data = null;
+		JList m_attribList = new JList();
+		String[] tempAttribNames;
+
+
+		int extpad=3;
+		int cellSize=3;
+		int m_classIndex;
+		JComboBox m_classAttrib = new JComboBox();
+
+
+		String type;
+		m_data=la.getInputData().getInstances();
+		tempAttribNames=new String[m_data.numAttributes()];
+
+		removeAll();
+		m_classAttrib.removeAllItems();
+		for (int i = 0; i < tempAttribNames.length; i++) {
+			type = " (" + Attribute.typeToStringShort(m_data.attribute(i)) + ")";
+			tempAttribNames[i] = new String("Colour: " + m_data.attribute(i).name()
+					+ " " + type);
+			m_classAttrib.addItem(tempAttribNames[i]);
+		}
+		if (m_data.classIndex() == -1) {
+			m_classAttrib.setSelectedIndex(tempAttribNames.length - 1);
+		} else {
+			m_classAttrib.setSelectedIndex(m_data.classIndex());
+		}
+		m_attribList.setListData(tempAttribNames);
+		m_attribList.setSelectionInterval(0, tempAttribNames.length - 1);
+		m_classAttrib.setSelectedIndex(tempAttribNames.length - 1);
+		m_classIndex = m_classAttrib.getSelectedIndex();
+		m_selectedAttribs = m_attribList.getSelectedIndices();
+
+
+		VisualizePanel2 vp = new VisualizePanel2();
+
+		try {
+			PlotData2D pd = new PlotData2D(m_data);
+			pd.setPlotName("Master Plot");
+			vp.setMasterPlot(pd);
+			// System.out.println("x: "+i+" y: "+j);
+			vp.setXIndex(m_selectedAttribs[0]);
+			vp.setYIndex(m_selectedAttribs[0]);
+			vp.m_ColourCombo.setSelectedIndex(m_classIndex);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		vp.setSize(440,600);
+		vp.setVisible(true);
+		setLayout(new BorderLayout());
+		this.add(vp,BorderLayout.CENTER);
+		validate();
+		repaint();
+	}
+
+	void addAssociationPanel(ParentLabel la){
+		try {
+			clusterCheck=0;
+			associationCheck=1;
+			classifyCheck=0;
+			if(la.getId()==-1)
+				la.setId(AssociationLabelCount++);
+
+			if(sp_list.size()<=la.getId() ){
+				sp = new AssociationsPanel();
+				sp_list.add(sp);
+			}
+			else
+				sp=sp_list.get(la.getId());
+
+			int x=0;
+			int y=0;
+			removeAll();   
+			pd=new PropertyDialog();
+
+			weka.gui.LogPanel lp = new weka.gui.LogPanel();
+
+			//jf.getContentPane().add(lp, BorderLayout.SOUTH);
+
+			sp.setRightPanel(this);
+			sp.getAssociatorEditor().setRightPanel(this);
+			sp.setInstances(la.getInputData().getInstances());
+
+			if(((AssociationLabel)la).getAlgorithm()=="Apriori")
+				sp.getAssociatorEditor().setApriori();
+			else if(((AssociationLabel)la).getAlgorithm()=="FPGrowth")
+				sp.getAssociatorEditor().setFPGrowth();
+			else
+				sp.getAssociatorEditor().setFilteredAssociator();
+
+
+
+
+			JPanel jp=pd.initialize(sp.getAssociatorEditor(), x, y);
+
+
+			//this.add(jp,BorderLayout.CENTER);
+
+			validate();
+			repaint();
+
+
+
+
+			tp=new RightTabbedPane(this,jp,sp,"Algorithm");
+			//this.add(sp,BorderLayout.CENTER);  //ouput패널 
+			//this.add(lp,BorderLayout.SOUTH);	//log 패널 
+			//sp.startAssociator();
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			System.err.println(ex.getMessage());
+		}
+	}
+	/*
+	public void AssociationEdit(){
+		removeAll();
+		JPanel jp=pd.initialize(sp.getAssociatorEditor(), 0, 0);
+		setLayout(new BorderLayout());
+		add(jp,BorderLayout.CENTER);
+		validate();
+		repaint();
+
+	}
+	 */
+	public void AssociationOutput(){
+		sp.startAssociator();
+		tp.setSelectedIndex(1);
+	}
+	public void addClusterPanel(ParentLabel la){
+		try {
+			associationCheck=0;
+			clusterCheck=1;
+			classifyCheck=0;
+			int x=0,y=0;
+			if(la.getId()==-1)
+				la.setId(ClusterLabelCount++);
+
+			if(cp_list.size()<=la.getId() ){
+				cp = new ClustererPanel();
+				cp_list.add(cp);
+			}
+			else
+				cp=cp_list.get(la.getId());
+
+
+			pd=new PropertyDialog();
+			removeAll();
+			//add(sp, BorderLayout.CENTER);
+			//weka.gui.LogPanel lp = new weka.gui.LogPanel();
+			//sp.setLog(lp);
+			//add(lp, BorderLayout.SOUTH);
+
+			cp.setRightPanel(this);
+			cp.getClustererEditor().setRightPanel(this);
+			cp.setInstances(la.getInputData().getInstances());
+			JPanel jp=pd.initialize(cp.getClustererEditor(), x, y);
+			JPanel trainPanel=new JPanel();
+			trainPanel.setLayout(new BorderLayout());
+			trainPanel.add(cp.getTrainPanel(), BorderLayout.NORTH);
+
+
+
+
+			tp=new RightTabbedPane(this,trainPanel,jp,cp,"train");
+
+			validate();
+			repaint();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			System.err.println(ex.getMessage());
+		}
+	}
+	public void ClusterOutput(){
+		cp.startClusterer();
+		tp.setSelectedIndex(2);
+	}
+	public void addClassifyPanel(ParentLabel la){
+		try {
+			associationCheck=0;
+			clusterCheck=0;
+			classifyCheck=1;
+
+			removeAll();
+			int x=0,y=0;
+			if(la.getId()==-1)
+				la.setId(ClassifyLabelCount++);
+
+			if(fp_list.size()<=la.getId() ){
+				fp = new ClassifierPanel();
+				fp_list.add(fp);
+			}
+			else
+				fp=fp_list.get(la.getId());
+
+			//weka.gui.LogPanel lp = new weka.gui.LogPanel();
+			//fp.setLog(lp);
+			//fp.add(lp, BorderLayout.SOUTH);
+
+			pd=new PropertyDialog();
+			fp.setRightPanel(this);
+			fp.getClassifierEditor().setRightPanel(this);
+			fp.setInstances(la.getInputData().getInstances());
+			JPanel jp=pd.initialize(fp.getClassifierEditor(), x, y);
+			JPanel trainPanel=new JPanel();
+			trainPanel.setLayout(new BorderLayout());
+			trainPanel.add(fp.getTrainPanel(), BorderLayout.NORTH);
+			
+			
+			tp=new RightTabbedPane(this,trainPanel,jp,fp,"train");
+
+			
+			repaint();
+			validate();
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			System.err.println(ex.getMessage());
+		}
+
+	}
+	public void classifyOutput(){
+		fp.startClassifier();
+		tp.setSelectedIndex(2);
+	}
+
+
+}

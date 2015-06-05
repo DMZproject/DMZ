@@ -1,0 +1,39 @@
+package DMZ.gui;
+
+import java.awt.Image;
+import java.util.ArrayList;
+
+import javax.swing.ImageIcon;
+
+import DMZ.inputdata.InputData;
+
+public class InputDataLabel extends OnlyOutputLabel {
+
+	boolean selected = false;
+	int colorType=1;
+	String type = "open";
+	ImageIcon enter_openImageIcon = new ImageIcon("IconImage/enter_openImageIcon.PNG");
+	
+	
+	InputDataLabel() {
+		inputdata= new InputData();
+		enter_openImageIcon = new ImageIcon(enter_openImageIcon.getImage().getScaledInstance(70, 66, Image.SCALE_SMOOTH));
+		setIcon(enter_openImageIcon);
+		
+
+	}
+	InputDataLabel(String name) {
+		super(name);
+	}
+	public int getColorType(){
+		return colorType;
+	}
+	
+	public String getType(){
+		return type;
+	}
+
+	public void run() {
+		rightPanel.addOpenFilePanel(this);
+	}
+}

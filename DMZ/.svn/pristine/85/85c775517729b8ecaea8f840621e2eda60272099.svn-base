@@ -1,0 +1,45 @@
+package DMZ.gui;
+
+import java.util.ArrayList;
+
+public abstract class BothLabel extends ParentLabel {
+
+	final int labelType = 2;
+
+	ParentLabel fromLabel;
+	ArrayList<ParentLabel> toLabelList = new ArrayList<ParentLabel>();
+
+	BothLabel() {
+
+	}
+
+	BothLabel(String name) {
+		super(name);
+	}
+
+	BothLabel(String name, String type) {
+		super(name, type);
+	}
+
+	public int getLabelType() {
+		return labelType;
+	}
+
+	public void setFromLabel(ParentLabel fromLabel) {
+		this.fromLabel = fromLabel;
+	}
+
+	public ParentLabel getFromLabel() {
+		return fromLabel;
+	}
+
+	public ArrayList<ParentLabel> getToLabelList() {
+		return toLabelList;
+	}
+
+	public void addToLabel(ParentLabel toLabel) {
+		toLabelList.add(toLabel);
+	}
+
+	public abstract void run();
+}

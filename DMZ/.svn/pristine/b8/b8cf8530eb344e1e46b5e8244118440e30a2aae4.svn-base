@@ -1,0 +1,47 @@
+package DMZ.gui;
+
+import javax.swing.JLabel;
+
+import DMZ.inputdata.InputData;
+
+public abstract class ParentLabel extends JLabel {
+
+	String type;
+	int labelType;
+	boolean selected = false;
+	RightPanel rightPanel;
+	InputData inputdata;
+	
+	ParentLabel() {
+
+	}
+
+	ParentLabel(String name) {
+		this.setText(name);
+	}
+
+	ParentLabel(String name, String type) {
+		this.setText(name);
+		this.type = type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public String getType() {
+		return type;
+	}
+	
+
+
+	
+	public void setRightPanel(RightPanel right) {
+		// TODO Auto-generated method stub
+		this.rightPanel=right;
+	}
+	public abstract int getLabelType();
+	public abstract void setInputData(InputData inputdata);
+	public abstract InputData getInputData();
+	public abstract void run();
+}

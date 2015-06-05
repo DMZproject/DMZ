@@ -1,0 +1,43 @@
+package DMZ.gui;
+
+import DMZ.inputdata.InputData;
+
+public class ClassifyLabel extends BothLabel{
+	InputData inputData;
+	boolean selected = false;
+	String algorithm;
+	int colorType=4;
+	String type = "classify";
+	ClassifyLabel(){
+
+	}
+
+	ClassifyLabel(String name) {
+		super(name);
+	}
+
+	public void setInputData(InputData inputData) {
+		this.inputData = inputData;
+	}
+
+	public InputData getInputData() {
+		return inputData;
+	}
+
+	public int getColorType(){
+		return colorType;
+	}
+	public String getType() {
+		return type;
+	}
+	public void run() {
+		rightPanel.addClassifyPanel(this);
+
+	}
+	public void setAlgorithm(String al){
+		this.algorithm=al;
+	}
+	public String getAlgorithm(){
+		return algorithm;
+	}
+}

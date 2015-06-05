@@ -1,0 +1,55 @@
+package DMZ.gui;
+
+import java.awt.BorderLayout;
+
+import weka.core.Instances;
+import DMZ.gui.OnlyInputLabel;
+import DMZ.inputdata.InputData;
+
+public class AssociationLabel extends BothLabel{
+
+
+	InputData inputData;
+	boolean selected = false;
+	String algorithm;
+	int colorType=4;
+	String type="association";
+
+
+
+
+
+	AssociationLabel(){
+
+	}
+
+	AssociationLabel(String name) {
+		super(name);
+	}
+
+	public void setInputData(InputData inputData) {
+		this.inputData = inputData;
+	}
+
+	public InputData getInputData() {
+		return inputData;
+	}
+	
+	public int getColorType(){
+		return colorType;
+	}
+	public String getType() {
+		return type;
+	}
+	public void run() {
+		rightPanel.addAssociationPanel(this);
+		
+	}
+	public void setAlgorithm(String al){
+		this.algorithm=al;
+	}
+	public String getAlgorithm(){
+		return algorithm;
+	}
+	
+}

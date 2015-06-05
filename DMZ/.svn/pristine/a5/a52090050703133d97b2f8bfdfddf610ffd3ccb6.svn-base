@@ -1,0 +1,55 @@
+package DMZ.gui;
+import java.awt.BorderLayout;
+import java.awt.event.KeyEvent;
+
+import javax.swing.JButton;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+
+
+public class RightTabbedPane extends JTabbedPane{
+
+	JPanel firstPanel;
+	JPanel secondPanel;
+	JButton tab1,tab2;
+	String type;
+	
+	RightTabbedPane(RightPanel right,JPanel firstPanel,JPanel secondPanel,String type){
+		this.firstPanel = firstPanel;
+		this.secondPanel = secondPanel;
+		this.type = type;
+		this.setTabPlacement(JTabbedPane.TOP);
+		entry(right);
+	}
+	
+	private void entry(RightPanel right){
+		right.removeAll();
+		firstPanel.setVisible(true);
+		secondPanel.setVisible(true);
+
+		switch(type){
+		case "Algorithm":
+			this.addTab("Edit",firstPanel);
+			this.setMnemonicAt(0, KeyEvent.VK_1);
+			this.addTab("Result", secondPanel);
+			this.setMnemonicAt(1, KeyEvent.VK_2);
+			break;
+		case "filter":
+			this.addTab("Selected",firstPanel);
+			this.setMnemonicAt(0, KeyEvent.VK_1);
+			this.addTab("Edit", secondPanel);
+			this.setMnemonicAt(1, KeyEvent.VK_2);
+			break;
+		}
+		this.setVisible(true);
+		right.setLayout(new BorderLayout());
+		right.add(this);
+	
+		right.validate();
+		right.repaint();
+	}
+	
+
+
+	
+}

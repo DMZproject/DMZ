@@ -1,0 +1,899 @@
+package DMZ.gui;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.SwingConstants;
+
+public class LeftPanel extends JPanel {
+
+	// 좌특 패널 버튼
+	// 데이터 입력
+	RightPanel rightPanel;
+	JButton inputBtn = new JButton();
+
+	
+
+	InputDataLabel openDataLabel = new InputDataLabel("데이터 열기");
+	EditDataLabel editDataLabel = new EditDataLabel("데이터 수정");
+	SaveDataLabel saveDataLabel = new SaveDataLabel("데이터 저장");
+
+	// 데이터 시각화
+	JButton visualizeBtn = new JButton();
+	HistogramLabel histogramLabel = new HistogramLabel("히스토그램");
+	InputDataLabel plotLabel = new InputDataLabel("산포도");
+
+	
+	// 데이터 전처리
+	JButton preprocessBtn = new JButton();
+
+	JButton supervisedBtn = new JButton("지도");
+	JButton unSupervisedBtn = new JButton("비지도");
+
+	JLabel supervisedAttLabel = new JLabel("지도 속성");
+	JLabel supervisedInstLabel = new JLabel("지도 인스턴스");
+
+	JLabel unSupervisedAttLabel = new JLabel("비지도 속성");
+	JLabel unSupervisedInstLabel = new JLabel("비지도 인스턴스");
+
+	// 데이터 마이닝
+	JButton dataMiningBtn = new JButton();
+
+	JButton classifyBtn = new JButton("분류");
+	ClassifyLabel classifyAlgorithm1_Label = new ClassifyLabel("classify");
+	ClassifyLabel classifyAlgorithm2_Label = new ClassifyLabel("algorithm2");
+	ClassifyLabel classifyAlgorithm3_Label = new ClassifyLabel("algorithm3");
+	ClassifyLabel classifyAlgorithm4_Label = new ClassifyLabel("algorithm4");
+
+	JButton clusterBtn = new JButton("군집");
+	ClusterLabel clusterAlgorithm1_Label = new ClusterLabel("cluster");
+	ClusterLabel clusterAlgorithm2_Label = new ClusterLabel("algorithm2");
+	ClusterLabel clusterAlgorithm3_Label = new ClusterLabel("algorithm3");
+	ClusterLabel clusterAlgorithm4_Label = new ClusterLabel("algorithm4");
+
+	JButton associateBtn = new JButton("연관");
+	
+	AssociationLabel associateAlgorithm1_Label = new AssociationLabel("Apriori");
+	AssociationLabel associateAlgorithm2_Label = new AssociationLabel("FPGrowth");
+	AssociationLabel associateAlgorithm3_Label = new AssociationLabel("FilteredAssociator");
+	AssociationLabel associateAlgorithm4_Label = new AssociationLabel("algorithm4");
+
+
+	JButton analyzeBtn = new JButton();
+	
+	
+	ImageIcon scatterPlotImageIcon = new ImageIcon("IconImage/scatterPlotIcon.PNG");
+	ImageIcon histogramImageIcon = new ImageIcon("IconImage/histogramIcon.PNG");
+	ImageIcon editImageIcon = new ImageIcon("IconImage/editImageIcon.PNG");
+	ImageIcon openImageIcon = new ImageIcon("IconImage/openImageIcon.PNG");
+	ImageIcon saveImageIcon = new ImageIcon("IconImage/saveImageIcon.PNG");
+	
+	ImageIcon inputBtnImageIcon =  new ImageIcon("IconImage/dataInputIcon.png");
+	ImageIcon visualizeBtnImageIcon = new ImageIcon("IconImage/dataVisualizeIcon.png");
+	ImageIcon preprocessBtnImageIcon = new ImageIcon("IconImage/dataPreprocess.png");
+	ImageIcon dataMiningBtnImageIcon = new ImageIcon("IconImage/dataMiningIcon.png");
+	ImageIcon analyzeBtnImageIcon = new ImageIcon("IconImage/analysisIcon.png");
+	
+	ImageIcon enter_inputBtnImageIcon =  new ImageIcon("IconImage/enter_dataInputIcon.png");
+	ImageIcon enter_visualizeBtnImageIcon = new ImageIcon("IconImage/enter_dataVisualizeIcon.png");
+	ImageIcon enter_preprocessBtnImageIcon = new ImageIcon("IconImage/enter_dataPreprocess.png");
+	ImageIcon enter_dataMiningBtnImageIcon = new ImageIcon("IconImage/enter_dataMiningIcon.png");
+	ImageIcon enter_analyzeBtnImageIcon = new ImageIcon("IconImage/enter_analysisIcon.png");
+	
+	boolean inputBtnSelected = false;
+	boolean visualizeBtnSelected = false;
+	boolean preprocessBtnSelected = false;
+	boolean dataMiningBtnSelected = false;
+	boolean analyzeBtnSelected = false;
+
+	boolean classifyBtnSelected = false;
+	boolean clusterBtnSelected = false;
+	boolean associateBtnSelected = false;
+	
+	
+	boolean supervisedBtnSelected = false;
+	boolean unSupervisedBtnSelected = false;
+
+	NewLabelListener newLabelListener = new NewLabelListener();
+	Point sp;
+	LeftPanel thisPanel = this;
+	CenterPanel centerPanel;
+
+	LeftPanel() {
+
+		setLayout(null);
+		inputBtn.setBounds(8, 8, 264, 60);
+		visualizeBtn.setBounds(8, 68, 264, 60);
+		preprocessBtn.setBounds(8, 128, 264, 60);
+		dataMiningBtn.setBounds(8, 188, 264, 60);
+		analyzeBtn.setBounds(8, 248, 264, 60);
+		
+		
+		inputBtnImageIcon =new ImageIcon( inputBtnImageIcon.getImage().getScaledInstance(inputBtn.getWidth(),inputBtn.getHeight(),  Image.SCALE_SMOOTH));
+		visualizeBtnImageIcon =new ImageIcon(  visualizeBtnImageIcon.getImage().getScaledInstance( visualizeBtn.getWidth(), visualizeBtn.getHeight(),  Image.SCALE_SMOOTH));
+		preprocessBtnImageIcon = new ImageIcon(preprocessBtnImageIcon.getImage().getScaledInstance(preprocessBtn.getWidth(), preprocessBtn.getHeight(),  Image.SCALE_SMOOTH));
+		dataMiningBtnImageIcon = new ImageIcon(dataMiningBtnImageIcon.getImage().getScaledInstance(dataMiningBtn.getWidth(), dataMiningBtn.getHeight(), Image.SCALE_SMOOTH));
+		analyzeBtnImageIcon = new ImageIcon(analyzeBtnImageIcon.getImage().getScaledInstance(analyzeBtn.getWidth(), analyzeBtn.getHeight(),Image.SCALE_SMOOTH));
+		
+		
+		
+		enter_inputBtnImageIcon =new ImageIcon( enter_inputBtnImageIcon.getImage().getScaledInstance(inputBtn.getWidth(),inputBtn.getHeight(),  Image.SCALE_SMOOTH));
+		enter_visualizeBtnImageIcon =new ImageIcon(  enter_visualizeBtnImageIcon.getImage().getScaledInstance( visualizeBtn.getWidth(), visualizeBtn.getHeight(),  Image.SCALE_SMOOTH));
+		enter_preprocessBtnImageIcon = new ImageIcon(enter_preprocessBtnImageIcon.getImage().getScaledInstance(preprocessBtn.getWidth(), preprocessBtn.getHeight(),  Image.SCALE_SMOOTH));
+		enter_dataMiningBtnImageIcon = new ImageIcon(enter_dataMiningBtnImageIcon.getImage().getScaledInstance(dataMiningBtn.getWidth(), dataMiningBtn.getHeight(), Image.SCALE_SMOOTH));
+		enter_analyzeBtnImageIcon = new ImageIcon(enter_analyzeBtnImageIcon.getImage().getScaledInstance(analyzeBtn.getWidth(), analyzeBtn.getHeight(),Image.SCALE_SMOOTH));
+		
+		
+		
+		
+		
+		inputBtn.setIcon(inputBtnImageIcon);
+		visualizeBtn.setIcon(visualizeBtnImageIcon);
+		preprocessBtn.setIcon(preprocessBtnImageIcon);
+		dataMiningBtn.setIcon(dataMiningBtnImageIcon);
+		analyzeBtn.setIcon(analyzeBtnImageIcon);
+		
+		scatterPlotImageIcon = new ImageIcon(scatterPlotImageIcon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH));
+		histogramImageIcon = new ImageIcon(histogramImageIcon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH));
+		editImageIcon = new ImageIcon(editImageIcon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH));
+		openImageIcon = new ImageIcon(openImageIcon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH));
+		saveImageIcon = new ImageIcon(saveImageIcon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH));
+		
+		
+		
+		
+		add(inputBtn);
+		add(visualizeBtn);
+		add(preprocessBtn);
+		add(dataMiningBtn);
+		add(analyzeBtn);
+		
+		
+		inputBtn.addMouseListener(new MouseAdapter(){
+			JButton btn;
+			public void mouseEntered(MouseEvent me)
+			{
+				btn = (JButton)me.getSource();
+				btn.setIcon(enter_inputBtnImageIcon);
+			}
+			
+			public void mouseExited(MouseEvent me)
+			{
+				btn = (JButton)me.getSource();
+				btn.setIcon(inputBtnImageIcon);
+			}
+		
+		});
+		visualizeBtn.addMouseListener(new MouseAdapter(){
+			JButton btn;
+			public void mouseEntered(MouseEvent me)
+			{
+				btn = (JButton)me.getSource();
+				btn.setIcon(enter_visualizeBtnImageIcon);
+			}
+			
+			public void mouseExited(MouseEvent me)
+			{
+				btn = (JButton)me.getSource();
+				btn.setIcon(visualizeBtnImageIcon);
+			}
+		
+		});
+		preprocessBtn.addMouseListener(new MouseAdapter(){
+			JButton btn;
+			public void mouseEntered(MouseEvent me)
+			{
+				btn = (JButton)me.getSource();
+				btn.setIcon(enter_preprocessBtnImageIcon);
+			}
+			
+			public void mouseExited(MouseEvent me)
+			{
+				btn = (JButton)me.getSource();
+				btn.setIcon(preprocessBtnImageIcon);
+			}
+		
+		});
+		dataMiningBtn.addMouseListener(new MouseAdapter(){
+			JButton btn;
+			public void mouseEntered(MouseEvent me)
+			{
+				btn = (JButton)me.getSource();
+				btn.setIcon(enter_dataMiningBtnImageIcon);
+			}
+			
+			public void mouseExited(MouseEvent me)
+			{
+				btn = (JButton)me.getSource();
+				btn.setIcon(dataMiningBtnImageIcon);
+			}
+		
+		});
+		analyzeBtn.addMouseListener(new MouseAdapter(){
+			JButton btn;
+			public void mouseEntered(MouseEvent me)
+			{
+				btn = (JButton)me.getSource();
+				btn.setIcon(enter_analyzeBtnImageIcon);
+			}
+			
+			public void mouseExited(MouseEvent me)
+			{
+				btn = (JButton)me.getSource();
+				btn.setIcon(analyzeBtnImageIcon);
+			}
+		
+		});
+		
+		
+		inputBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				clickInputBtn();
+			}
+		});
+		visualizeBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				clickVisualizeBtn();
+			}
+		});
+		preprocessBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				clickPreprocessBtn();
+			}
+		});
+
+		dataMiningBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				clickDataMiningBtn();
+			}
+		});
+		classifyBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				clickClassifyBtn();
+			}
+		});
+
+		clusterBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				clickClusterBtn();
+			}
+		});
+
+		associateBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				clickAssociateBtn();
+			}
+		});
+		unSupervisedBtn.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				clickUnSupervisedBtn();
+				
+			}
+			
+		});
+		supervisedBtn.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				clickSupervisedBtn();
+				
+			}
+			
+		});
+		
+		
+		
+
+		
+		
+		
+
+		openDataLabel.addMouseListener(newLabelListener);
+		openDataLabel.addMouseMotionListener(newLabelListener);
+		editDataLabel.addMouseListener(newLabelListener);
+		editDataLabel.addMouseMotionListener(newLabelListener);
+		saveDataLabel.addMouseListener(newLabelListener);
+		saveDataLabel.addMouseMotionListener(newLabelListener);
+		histogramLabel.addMouseListener(newLabelListener);
+		histogramLabel.addMouseMotionListener(newLabelListener);
+		plotLabel.addMouseListener(newLabelListener);
+		plotLabel.addMouseMotionListener(newLabelListener);
+
+		classifyAlgorithm1_Label.addMouseListener(newLabelListener);
+		classifyAlgorithm1_Label.addMouseMotionListener(newLabelListener);
+		classifyAlgorithm2_Label.addMouseListener(newLabelListener);
+		classifyAlgorithm2_Label.addMouseMotionListener(newLabelListener);
+		classifyAlgorithm3_Label.addMouseListener(newLabelListener);
+		classifyAlgorithm3_Label.addMouseMotionListener(newLabelListener);
+		classifyAlgorithm4_Label.addMouseListener(newLabelListener);
+		classifyAlgorithm4_Label.addMouseMotionListener(newLabelListener);
+		clusterAlgorithm1_Label.addMouseListener(newLabelListener);
+		clusterAlgorithm1_Label.addMouseMotionListener(newLabelListener);
+		clusterAlgorithm2_Label.addMouseListener(newLabelListener);
+		clusterAlgorithm2_Label.addMouseMotionListener(newLabelListener);
+		clusterAlgorithm3_Label.addMouseListener(newLabelListener);
+		clusterAlgorithm3_Label.addMouseMotionListener(newLabelListener);
+		clusterAlgorithm4_Label.addMouseListener(newLabelListener);
+		clusterAlgorithm4_Label.addMouseMotionListener(newLabelListener);
+		associateAlgorithm1_Label.addMouseListener(newLabelListener);
+		associateAlgorithm1_Label.addMouseMotionListener(newLabelListener);
+		associateAlgorithm2_Label.addMouseListener(newLabelListener);
+		associateAlgorithm2_Label.addMouseMotionListener(newLabelListener);
+		associateAlgorithm3_Label.addMouseListener(newLabelListener);
+		associateAlgorithm3_Label.addMouseMotionListener(newLabelListener);
+		associateAlgorithm4_Label.addMouseListener(newLabelListener);
+		associateAlgorithm4_Label.addMouseMotionListener(newLabelListener);
+	}
+
+	public void clickInputBtn() {
+		if (visualizeBtnSelected == true)
+			clickVisualizeBtn();
+		if (preprocessBtnSelected == true)
+			clickPreprocessBtn();
+		if (dataMiningBtnSelected == true)
+			clickDataMiningBtn();
+
+		if (inputBtnSelected == false) {
+		
+
+			visualizeBtn.setLocation(visualizeBtn.getX(),visualizeBtn.getY() + 100);
+			preprocessBtn.setLocation(preprocessBtn.getX(),preprocessBtn.getY() + 100);
+			dataMiningBtn.setLocation(dataMiningBtn.getX(),dataMiningBtn.getY() + 100);
+			analyzeBtn.setLocation(analyzeBtn.getX(), analyzeBtn.getY() + 100);
+
+			openDataLabel.setBounds(inputBtn.getX() + 5, inputBtn.getY() + 70,120, 40);
+			openDataLabel.setIcon(openImageIcon);
+
+			editDataLabel.setBounds(inputBtn.getX() + 130, inputBtn.getY()+70,120, 40);
+			editDataLabel.setIcon(editImageIcon);
+
+			saveDataLabel.setBounds(inputBtn.getX() + 5,inputBtn.getY() + 120, 120, 40);
+			saveDataLabel.setIcon(saveImageIcon);
+
+			openDataLabel.setVisible(true);
+			editDataLabel.setVisible(true);
+			saveDataLabel.setVisible(true);
+
+			add(openDataLabel);
+
+			add(editDataLabel);
+			add(saveDataLabel);
+
+			inputBtnSelected = true;
+		}
+
+		else {
+
+			openDataLabel.setVisible(false);
+			editDataLabel.setVisible(false);
+			saveDataLabel.setVisible(false);
+
+			visualizeBtn.setLocation(visualizeBtn.getX(),
+					visualizeBtn.getY() - 100);
+			preprocessBtn.setLocation(preprocessBtn.getX(),
+					preprocessBtn.getY() - 100);
+			dataMiningBtn.setLocation(dataMiningBtn.getX(),
+					dataMiningBtn.getY() - 100);
+			analyzeBtn.setLocation(analyzeBtn.getX(), analyzeBtn.getY() - 100);
+
+			inputBtnSelected = false;
+		}
+	}
+
+	public void clickVisualizeBtn() {
+		if (inputBtnSelected == true)
+			clickInputBtn();
+		if (preprocessBtnSelected == true)
+			clickPreprocessBtn();
+		if (dataMiningBtnSelected == true)
+			clickDataMiningBtn();
+
+		if (visualizeBtnSelected == false) {
+
+			preprocessBtn.setLocation(preprocessBtn.getX(),preprocessBtn.getY() + 80);
+			dataMiningBtn.setLocation(dataMiningBtn.getX(),dataMiningBtn.getY() + 80);
+			analyzeBtn.setLocation(analyzeBtn.getX(), analyzeBtn.getY() + 80);
+
+			histogramLabel.setBounds(visualizeBtn.getX()+10,visualizeBtn.getY() + 80, 120, 40);
+			histogramLabel.setIcon(histogramImageIcon);
+
+			plotLabel.setBounds(visualizeBtn.getX() + 140,visualizeBtn.getY() + 80, 120, 40);
+			plotLabel.setIcon(scatterPlotImageIcon);
+			
+
+			histogramLabel.setVisible(true);
+			plotLabel.setVisible(true);
+
+			add(histogramLabel);
+			add(plotLabel);
+
+			visualizeBtnSelected = true;
+		}
+
+		else {
+			histogramLabel.setVisible(false);
+			plotLabel.setVisible(false);
+
+			preprocessBtn.setLocation(preprocessBtn.getX(),
+					preprocessBtn.getY() - 80);
+			dataMiningBtn.setLocation(dataMiningBtn.getX(),
+					dataMiningBtn.getY() - 80);
+			analyzeBtn.setLocation(analyzeBtn.getX(), analyzeBtn.getY() - 80);
+
+			visualizeBtnSelected = false;
+		}
+	}
+
+	public void clickPreprocessBtn() {
+		if (inputBtnSelected == true)
+			clickInputBtn();
+		if (visualizeBtnSelected == true)
+			clickVisualizeBtn();
+		if (dataMiningBtnSelected == true)
+			clickDataMiningBtn();
+		if (supervisedBtnSelected == true)
+			clickSupervisedBtn();
+		if (unSupervisedBtnSelected == true)
+			clickUnSupervisedBtn();
+
+		if (preprocessBtnSelected == false) {
+
+			dataMiningBtn.setLocation(dataMiningBtn.getX(),dataMiningBtn.getY() + 110);
+			analyzeBtn.setLocation(analyzeBtn.getX(), analyzeBtn.getY() + 110);
+
+			supervisedBtn.setBounds(preprocessBtn.getX() + 20,preprocessBtn.getY() + 70, 200, 40);
+			unSupervisedBtn.setBounds(preprocessBtn.getX() + 20,preprocessBtn.getY() + 120, 200, 40);
+
+			supervisedBtn.setVisible(true);
+			unSupervisedBtn.setVisible(true);
+
+			add(supervisedBtn);
+			add(unSupervisedBtn);
+
+			preprocessBtnSelected = true;
+		}
+
+		else {
+
+			supervisedBtn.setVisible(false);
+			unSupervisedBtn.setVisible(false);
+
+			dataMiningBtn.setLocation(dataMiningBtn.getX(),dataMiningBtn.getY() - 110);
+			analyzeBtn.setLocation(analyzeBtn.getX(), analyzeBtn.getY() - 110);
+
+			preprocessBtnSelected = false;
+		}
+	}
+
+	public void clickDataMiningBtn() {
+		if (inputBtnSelected == true)
+			clickInputBtn();
+		if (visualizeBtnSelected == true)
+			clickVisualizeBtn();
+		if (preprocessBtnSelected == true)
+			clickPreprocessBtn();
+		if (classifyBtnSelected == true)
+			clickClassifyBtn();
+		if (clusterBtnSelected == true)
+			clickClusterBtn();
+		if (associateBtnSelected == true)
+			clickAssociateBtn();
+
+		if (dataMiningBtnSelected == false) {
+			analyzeBtn.setLocation(analyzeBtn.getX(), analyzeBtn.getY() + 160);
+
+			classifyBtn.setBounds(dataMiningBtn.getX() + 20,
+					dataMiningBtn.getY() + 70, 200, 40);
+			clusterBtn.setBounds(dataMiningBtn.getX() + 20,
+					dataMiningBtn.getY() + 120, 200, 40);
+			associateBtn.setBounds(dataMiningBtn.getX() + 20,
+					dataMiningBtn.getY() + 170, 200, 40);
+
+			classifyBtn.setVisible(true);
+			clusterBtn.setVisible(true);
+			associateBtn.setVisible(true);
+
+			add(classifyBtn);
+			add(clusterBtn);
+			add(associateBtn);
+
+			dataMiningBtnSelected = true;
+		} else {
+
+			classifyBtn.setVisible(false);
+			clusterBtn.setVisible(false);
+			associateBtn.setVisible(false);
+
+			analyzeBtn.setLocation(analyzeBtn.getX(), analyzeBtn.getY() - 160);
+
+			dataMiningBtnSelected = false;
+		}
+
+	}
+
+	public void clickClassifyBtn() {
+		if (clusterBtnSelected == true)
+			clickClusterBtn();
+		if (associateBtnSelected == true)
+			clickAssociateBtn();
+
+		if (classifyBtnSelected == false) {
+			clusterBtn
+					.setLocation(classifyBtn.getX(), classifyBtn.getY() + 150);
+			associateBtn.setLocation(classifyBtn.getX(),
+					classifyBtn.getY() + 200);
+			analyzeBtn.setLocation(analyzeBtn.getX(), classifyBtn.getY() + 250);
+
+			classifyAlgorithm1_Label.setBounds(classifyBtn.getX() + 15,
+					classifyBtn.getY() + 50, 80, 40);
+			classifyAlgorithm1_Label.setOpaque(true);
+			classifyAlgorithm1_Label.setBackground(new Color(134, 229, 117));
+
+			classifyAlgorithm2_Label.setBounds(classifyBtn.getX() + 105,
+					classifyBtn.getY() + 50, 80, 40);
+			classifyAlgorithm2_Label.setOpaque(true);
+			classifyAlgorithm2_Label.setBackground(new Color(134, 229, 117));
+
+			classifyAlgorithm3_Label.setBounds(classifyBtn.getX() + 15,
+					classifyBtn.getY() + 100, 80, 40);
+			classifyAlgorithm3_Label.setOpaque(true);
+			classifyAlgorithm3_Label.setBackground(new Color(134, 229, 117));
+
+			classifyAlgorithm4_Label.setBounds(classifyBtn.getX() + 105,
+					classifyBtn.getY() + 100, 80, 40);
+			classifyAlgorithm4_Label.setOpaque(true);
+			classifyAlgorithm4_Label.setBackground(new Color(134, 229, 117));
+
+			classifyAlgorithm1_Label.setVisible(true);
+			classifyAlgorithm2_Label.setVisible(true);
+			classifyAlgorithm3_Label.setVisible(true);
+			classifyAlgorithm4_Label.setVisible(true);
+
+			add(classifyAlgorithm1_Label);
+			add(classifyAlgorithm2_Label);
+			add(classifyAlgorithm3_Label);
+			add(classifyAlgorithm4_Label);
+
+			classifyBtnSelected = true;
+		} else {
+			classifyAlgorithm1_Label.setVisible(false);
+			classifyAlgorithm2_Label.setVisible(false);
+			classifyAlgorithm3_Label.setVisible(false);
+			classifyAlgorithm4_Label.setVisible(false);
+
+			clusterBtn.setLocation(classifyBtn.getX(), clusterBtn.getY() - 100);
+			associateBtn.setLocation(classifyBtn.getX(),
+					associateBtn.getY() - 100);
+			analyzeBtn.setLocation(analyzeBtn.getX(), analyzeBtn.getY() - 100);
+
+			classifyBtnSelected = false;
+
+		}
+	}
+
+	public void clickClusterBtn() {
+		if (classifyBtnSelected == true)
+			clickClassifyBtn();
+		if (associateBtnSelected == true)
+			clickAssociateBtn();
+
+		if (clusterBtnSelected == false) {
+
+			associateBtn.setLocation(classifyBtn.getX(),
+					clusterBtn.getY() + 150);
+			analyzeBtn.setLocation(analyzeBtn.getX(), clusterBtn.getY() + 200);
+
+			clusterAlgorithm1_Label.setBounds(classifyBtn.getX() + 15,
+					classifyBtn.getY() + 100, 80, 40);
+			clusterAlgorithm1_Label.setOpaque(true);
+			clusterAlgorithm1_Label.setBackground(new Color(243, 97, 166));
+
+			clusterAlgorithm2_Label.setBounds(classifyBtn.getX() + 105,
+					classifyBtn.getY() + 100, 80, 40);
+			clusterAlgorithm2_Label.setOpaque(true);
+			clusterAlgorithm2_Label.setBackground(new Color(243, 97, 166));
+
+			clusterAlgorithm3_Label.setBounds(classifyBtn.getX() + 15,
+					classifyBtn.getY() + 150, 80, 40);
+			clusterAlgorithm3_Label.setOpaque(true);
+			clusterAlgorithm3_Label.setBackground(new Color(243, 97, 166));
+
+			clusterAlgorithm4_Label.setBounds(classifyBtn.getX() + 105,
+					classifyBtn.getY() + 150, 80, 40);
+			clusterAlgorithm4_Label.setOpaque(true);
+			clusterAlgorithm4_Label.setBackground(new Color(243, 97, 166));
+
+			clusterAlgorithm1_Label.setVisible(true);
+			clusterAlgorithm2_Label.setVisible(true);
+			clusterAlgorithm3_Label.setVisible(true);
+			clusterAlgorithm4_Label.setVisible(true);
+
+			add(clusterAlgorithm1_Label);
+			add(clusterAlgorithm2_Label);
+			add(clusterAlgorithm3_Label);
+			add(clusterAlgorithm4_Label);
+
+			clusterBtnSelected = true;
+		} else {
+			clusterAlgorithm1_Label.setVisible(false);
+			clusterAlgorithm2_Label.setVisible(false);
+			clusterAlgorithm3_Label.setVisible(false);
+			clusterAlgorithm4_Label.setVisible(false);
+
+			associateBtn.setLocation(classifyBtn.getX(),
+					associateBtn.getY() - 100);
+			analyzeBtn.setLocation(analyzeBtn.getX(), analyzeBtn.getY() - 100);
+
+			clusterBtnSelected = false;
+		}
+	}
+
+	public void clickAssociateBtn() {
+		if (clusterBtnSelected == true)
+			clickClusterBtn();
+		if (classifyBtnSelected == true)
+			clickClassifyBtn();
+
+		if (associateBtnSelected == false) {
+
+			analyzeBtn.setLocation(analyzeBtn.getX(), clusterBtn.getY() + 200);
+
+			associateAlgorithm1_Label.setBounds(classifyBtn.getX() + 15,
+					classifyBtn.getY() + 150, 80, 40);
+			associateAlgorithm1_Label.setOpaque(true);
+			associateAlgorithm1_Label.setBackground(new Color(67, 116, 217));
+
+			associateAlgorithm2_Label.setBounds(classifyBtn.getX() + 105,
+					classifyBtn.getY() + 150, 80, 40);
+			associateAlgorithm2_Label.setOpaque(true);
+			associateAlgorithm2_Label.setBackground(new Color(67, 116, 217));
+
+			associateAlgorithm3_Label.setBounds(classifyBtn.getX() + 15,
+					classifyBtn.getY() + 200, 80, 40);
+			associateAlgorithm3_Label.setOpaque(true);
+			associateAlgorithm3_Label.setBackground(new Color(67, 116, 217));
+
+			associateAlgorithm4_Label.setBounds(classifyBtn.getX() + 105,
+					classifyBtn.getY() + 200, 80, 40);
+			associateAlgorithm4_Label.setOpaque(true);
+			associateAlgorithm4_Label.setBackground(new Color(67, 116, 217));
+
+			associateAlgorithm1_Label.setVisible(true);
+			associateAlgorithm2_Label.setVisible(true);
+			associateAlgorithm3_Label.setVisible(true);
+			associateAlgorithm4_Label.setVisible(true);
+
+			add(associateAlgorithm1_Label);
+			add(associateAlgorithm2_Label);
+			add(associateAlgorithm3_Label);
+			add(associateAlgorithm4_Label);
+
+			associateBtnSelected = true;
+		} else {
+			associateAlgorithm1_Label.setVisible(false);
+			associateAlgorithm2_Label.setVisible(false);
+			associateAlgorithm3_Label.setVisible(false);
+			associateAlgorithm4_Label.setVisible(false);
+
+			analyzeBtn.setLocation(analyzeBtn.getX(), analyzeBtn.getY() - 100);
+
+			associateBtnSelected = false;
+		}
+
+	}
+	
+	public void clickUnSupervisedBtn() {
+		if (supervisedBtnSelected == true)
+			clickSupervisedBtn();
+		
+
+		if (unSupervisedBtnSelected == false) {
+			
+			
+			
+			dataMiningBtn.setLocation(dataMiningBtn.getX(), dataMiningBtn.getY()+50);
+			analyzeBtn.setLocation(analyzeBtn.getX(), analyzeBtn.getY() + 50);
+			
+			
+			unSupervisedAttLabel.setBounds(unSupervisedBtn.getX()+5,unSupervisedBtn.getY() + 50, 90, 40);
+			unSupervisedAttLabel.setOpaque(true);
+			unSupervisedAttLabel.setBackground(new Color(134, 229, 117));
+
+			unSupervisedInstLabel.setBounds(unSupervisedBtn.getX() + 105,unSupervisedBtn.getY() + 50, 90, 40);
+			unSupervisedInstLabel.setOpaque(true);
+			unSupervisedInstLabel.setBackground(new Color(134, 229, 117));
+
+		
+			unSupervisedAttLabel.setVisible(true);
+			unSupervisedInstLabel.setVisible(true);
+			
+			add(unSupervisedAttLabel);
+			add(unSupervisedInstLabel);
+			
+			
+			unSupervisedBtnSelected = true;
+		} else {
+			
+			
+			
+			analyzeBtn.setLocation(analyzeBtn.getX(), analyzeBtn.getY() - 50);
+			dataMiningBtn.setLocation(dataMiningBtn.getX(), dataMiningBtn.getY()-50);
+			
+			
+			unSupervisedAttLabel.setVisible(false);
+			unSupervisedInstLabel.setVisible(false);
+			
+			unSupervisedBtnSelected= false;
+		}
+
+	}
+	
+	public void clickSupervisedBtn() {
+		if (unSupervisedBtnSelected == true)
+			clickUnSupervisedBtn();
+		
+
+		if (supervisedBtnSelected == false) {
+			
+			unSupervisedBtn.setLocation(unSupervisedBtn.getX(),unSupervisedBtn.getY()+50);
+			dataMiningBtn.setLocation(dataMiningBtn.getX(), dataMiningBtn.getY()+50);
+			analyzeBtn.setLocation(analyzeBtn.getX(), analyzeBtn.getY() + 50);
+			
+
+			supervisedAttLabel.setBounds(supervisedBtn.getX() + 5,supervisedBtn.getY() + 50, 90, 40);
+			supervisedAttLabel.setOpaque(true);
+			supervisedAttLabel.setBackground(new Color(134, 229, 117));
+
+			supervisedInstLabel.setBounds(supervisedBtn.getX() + 105,supervisedBtn.getY() + 50, 90, 40);
+			supervisedInstLabel.setOpaque(true);
+			supervisedInstLabel.setBackground(new Color(134, 229, 117));
+
+		
+			supervisedAttLabel.setVisible(true);
+			supervisedInstLabel.setVisible(true);
+			
+			add(supervisedAttLabel);
+			add(supervisedInstLabel);
+			
+
+			
+			supervisedBtnSelected = true;
+		} else {
+		
+			unSupervisedBtn.setLocation(unSupervisedBtn.getX(),unSupervisedBtn.getY()-50);
+			analyzeBtn.setLocation(analyzeBtn.getX(), analyzeBtn.getY() - 50);
+			dataMiningBtn.setLocation(dataMiningBtn.getX(), dataMiningBtn.getY()-50);
+			
+			
+			supervisedAttLabel.setVisible(false);
+			supervisedInstLabel.setVisible(false);
+			
+			
+			supervisedBtnSelected  = false;
+		}
+
+	}
+	
+	
+
+	class NewLabelListener implements MouseMotionListener, MouseListener {
+
+		public void mousePressed(MouseEvent e) {
+
+			ParentLabel clickLabel = (ParentLabel) e.getSource();
+			ParentLabel la = null;
+			if (clickLabel.getText() == "데이터 열기") {
+				la = new InputDataLabel();
+				((ParentLabel) la).setRightPanel(rightPanel);
+			}
+
+			else if (clickLabel.getText() == "데이터 수정") {
+				la = new EditDataLabel();
+				((ParentLabel) la).setRightPanel(rightPanel);
+			}
+
+			else if (clickLabel.getText() == "데이터 저장") {
+				la = new SaveDataLabel();
+				((ParentLabel) la).setRightPanel(rightPanel);
+			}
+
+			else if (clickLabel.getText() == "히스토그램") {
+				la = new HistogramLabel();
+				((ParentLabel) la).setRightPanel(rightPanel);
+			}
+			else if (clickLabel.getText() == "산포도") {
+				la = new ScatterPlotLabel();
+				((ParentLabel) la).setRightPanel(rightPanel);
+			}
+			else if (clickLabel.getText() == "Apriori") {
+				la = new AssociationLabel();
+				((ParentLabel) la).setRightPanel(rightPanel);
+				la.setId(-1);
+				((AssociationLabel)la).setAlgorithm("Apriori");
+			}
+			else if (clickLabel.getText() == "FPGrowth") {
+				la = new AssociationLabel();
+				((ParentLabel) la).setRightPanel(rightPanel);
+				la.setId(-1);							
+				((AssociationLabel)la).setAlgorithm("FPGrowth");
+			}
+			else if (clickLabel.getText() == "FilteredAssociator") {
+				la = new AssociationLabel();
+				((ParentLabel) la).setRightPanel(rightPanel);
+				la.setId(-1);
+				((AssociationLabel)la).setAlgorithm("FilteredAssociator");
+			}
+			else if (clickLabel.getText() == "cluster") {
+				la = new ClusterLabel();
+				((ParentLabel) la).setRightPanel(rightPanel);
+				la.setId(-1);
+			}
+			else if (clickLabel.getText() == "classify") {
+				la = new ClassifyLabel();
+				((ParentLabel) la).setRightPanel(rightPanel);
+				la.setId(-1);
+			}
+			
+
+			la.setText(clickLabel.getText());
+			la.setIcon(clickLabel.getIcon());
+			la.setSize(77, 90);
+			la.setBorder(null);
+
+			la.setHorizontalTextPosition(SwingConstants.CENTER);
+			la.setVerticalTextPosition(SwingConstants.BOTTOM);
+
+			la.setOpaque(true);
+			la.setBackground(Color.WHITE);
+
+			centerPanel.addLabel(la);
+
+		}
+
+		public void mouseReleased(MouseEvent e) {
+		}
+
+		public void mouseDragged(MouseEvent e) {
+		}
+
+		public void mouseMoved(MouseEvent e) {
+		}
+
+		public void mouseClicked(MouseEvent e) {
+		}
+
+		public void mouseEntered(MouseEvent e) {
+		}
+
+		public void mouseExited(MouseEvent e) {
+		}
+	}
+
+	public LeftPanel getLeftPanel() {
+		return this;
+	}
+
+	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
+
+	}
+
+	void setCenterPanel(CenterPanel centerPanel) {
+		this.centerPanel = centerPanel;
+	}
+
+	public void setRightPanel(RightPanel right) {
+		this.rightPanel = right;
+	}
+}

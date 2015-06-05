@@ -1,0 +1,49 @@
+package DMZ.gui;
+import DMZ.gui.*;
+import DMZ.inputdata.InputData;
+public class AnalyzeLabel extends OnlyInputLabel {
+	
+	InputData inputData;
+	boolean selected = false;
+	int colorType=5;
+	String type = "analyze";
+	
+	AnalyzeLabel(){
+		
+	}
+	
+	AnalyzeLabel(String name){
+		super(name);
+	}
+	
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		rightPanel.addAnalyzePanel(this);
+	}
+
+	@Override
+	public void setInputData(InputData inputData) {
+		// TODO Auto-generated method stub
+		this.inputData = inputData;
+	}
+
+	@Override
+	public InputData getInputData() {
+		// TODO Auto-generated method stub
+		return inputData;
+	}
+
+	@Override
+	public int getColorType() {
+		// TODO Auto-generated method stub
+		return colorType;
+	}
+
+	@Override
+	public String getType() {
+		// TODO Auto-generated method stub
+		return type;
+	}
+
+}

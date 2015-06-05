@@ -1,0 +1,35 @@
+package DMZ.gui;
+
+import java.util.ArrayList;
+
+public abstract class OnlyOutputLabel extends ParentLabel {
+
+	final int labelType = 1;
+
+	ArrayList<ParentLabel> toLabelList = new ArrayList<ParentLabel>();
+
+	public ArrayList<ParentLabel> getToLabelList() {
+		return toLabelList;
+	}
+
+	public void addToLabel(ParentLabel toLabel) {
+		toLabelList.add(toLabel);
+	}
+
+	OnlyOutputLabel() {
+	}
+
+	OnlyOutputLabel(String name) {
+		super(name);
+	}
+
+	OnlyOutputLabel(String name, String type) {
+		super(name, type);
+	}
+
+	public int getLabelType() {
+		return labelType;
+	}
+
+	public abstract void run();
+}

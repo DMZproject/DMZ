@@ -1,0 +1,47 @@
+package DMZ.gui;
+
+import java.awt.Image;
+
+import javax.swing.ImageIcon;
+import javax.swing.SwingConstants;
+
+import DMZ.inputdata.InputData;
+
+public class ClusterLabel extends BothLabel{
+	
+	boolean selected = false;
+	String algorithm;
+	int colorType=4;
+	String type="cluster";
+	ClusterLabel(){
+
+	}
+
+	ClusterLabel(String name) {
+		this.name = name;
+		String IconName = "IconImage/algorithmIcon/"+name+"Icon.png";
+		ImageIcon algorithmIcon = new ImageIcon(IconName);
+		setHorizontalAlignment(SwingConstants.CENTER);
+		setVerticalAlignment(SwingConstants.CENTER);
+		setIcon(new ImageIcon(algorithmIcon.getImage().getScaledInstance(80, 89, Image.SCALE_SMOOTH)));
+	}
+
+
+	public int getColorType(){
+		return colorType;
+	}
+
+	public void run() {
+		rightPanel.addClusterPanel(this);
+
+	}
+	public void setAlgorithm(String al){
+		this.algorithm=al;
+	}
+	public String getAlgorithm(){
+		return algorithm;
+	}
+	public String getType() {
+		return type;
+	}
+}

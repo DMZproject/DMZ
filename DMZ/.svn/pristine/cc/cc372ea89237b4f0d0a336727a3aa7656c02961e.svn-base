@@ -1,0 +1,34 @@
+package DMZ.gui;
+
+import javax.swing.JPanel;
+
+import DMZ.inputdata.InputData;
+
+public class SaveDataLabel extends OnlyInputLabel {
+
+	InputData inputData;
+	boolean selected = false;
+
+	SaveDataLabel() {
+
+	}
+
+	SaveDataLabel(String name) {
+		super(name);
+	}
+
+	public void setInputData(InputData inputData) {
+		this.inputData = inputData;
+	}
+
+	public InputData getInputData() {
+		return inputData;
+	}
+
+	public void run() {
+		inputData.saveWorkingInstancesToFileQ();
+	//	new RightTabbedPane(rightPanel,(JPanel)inputData.getHistogram().getHistogramPanel(), (JPanel)inputData.getInstancesSummaryPanel(), "filter");
+	//	rightPanel.addTabbedPane((JPanel)inputData.getHistogram().getHistogramPanel(), (JPanel)inputData.getInstancesSummaryPanel(), "filter");
+	}
+
+}

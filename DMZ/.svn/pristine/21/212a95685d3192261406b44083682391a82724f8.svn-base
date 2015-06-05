@@ -1,0 +1,51 @@
+package DMZ.gui;
+
+import java.awt.BorderLayout;
+
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JList;
+
+import weka.core.Attribute;
+import weka.core.Instances;
+import weka.gui.visualize.PlotData2D;
+import weka.gui.visualize.VisualizePanel;
+import DMZ.gui.OnlyInputLabel;
+import DMZ.inputdata.InputData;
+
+public class ScatterPlotLabel extends OnlyInputLabel{
+
+
+	InputData inputData;
+	boolean selected = false;
+	int colorType=2;
+	String type="scatterPlot";
+	
+	ScatterPlotLabel(){
+
+	}
+
+	ScatterPlotLabel(String name) {
+		super(name);
+	}
+
+	public void setInputData(InputData inputData) {
+		this.inputData = inputData;
+	}
+
+	public InputData getInputData() {
+		return inputData;
+	}
+		
+	public int getColorType(){
+		return colorType;
+	}
+	public String getType() {
+		return type;
+	}
+
+	public void run() {
+		rightPanel.addScatterPlot(this);
+		
+	}
+}

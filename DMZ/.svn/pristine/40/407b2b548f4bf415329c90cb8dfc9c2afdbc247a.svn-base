@@ -1,0 +1,29 @@
+package DMZ.gui;
+
+import DMZ.inputdata.InputData;
+
+public class HistogramLabel extends OnlyInputLabel {
+	InputData inputData;
+	boolean selected = false;
+
+	HistogramLabel() {
+
+	}
+
+	HistogramLabel(String name) {
+		super(name);
+	}
+
+	public void setInputData(InputData inputData) {
+		this.inputData = inputData;
+	}
+
+	public InputData getInputData() {
+		return inputData;
+	}
+
+	public void run() {
+		rightPanel.addHistogramPanel(this);
+	}
+
+}

@@ -1,0 +1,44 @@
+package DMZ.gui;
+
+import java.awt.BorderLayout;
+
+
+import weka.core.Instances;
+import DMZ.gui.OnlyInputLabel;
+import DMZ.inputdata.InputData;
+
+public class AssociationLabel extends OnlyInputLabel{
+
+
+	InputData inputData;
+	boolean selected = false;
+	
+
+
+
+
+
+	AssociationLabel(){
+
+	}
+
+	AssociationLabel(String name) {
+		super(name);
+	}
+
+	public void setInputData(InputData inputData) {
+		this.inputData = inputData;
+	}
+
+	public InputData getInputData() {
+		return inputData;
+	}
+	
+	
+
+	public void run() {
+		rightPanel.addAssociationPanel(this);
+		
+	}
+	
+}

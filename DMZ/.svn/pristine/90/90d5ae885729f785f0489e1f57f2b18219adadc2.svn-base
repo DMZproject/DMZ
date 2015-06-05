@@ -1,0 +1,98 @@
+package DMZ.gui;
+
+import javax.swing.JLabel;
+
+import DMZ.inputdata.InputData;
+
+public abstract class ParentLabel extends JLabel implements Cloneable{
+
+	int labelType;
+	boolean selected = false;
+	protected RightPanel rightPanel;
+	protected InputData inputdata=null;
+	String  expainText;
+	String type;
+	ParentLabel fromLabel;
+	int id;
+	int colorType=0;
+	String labelFilePath=null;
+	int xmlId=-1;
+	String name;
+	
+	
+	 public Object clone() throws CloneNotSupportedException
+	    {
+	        return super.clone();
+	    }
+	ParentLabel() {
+		
+	}
+
+	ParentLabel(String name) {
+		//setText(name);
+		this.name = name;
+	}
+	public String getName()
+	{
+		return name;
+	}
+	public void setName(String name){
+		this.name = name;
+	}
+	public void setRightPanel(RightPanel right) {
+		this.rightPanel = right;
+	}
+	public void setId(int id){
+		this.id=id;
+	}
+	public int getId(){
+		return this.id;
+	}
+	public void setLabelFilePath(String path){
+		this.labelFilePath=path;
+	}
+	public String getLabelFilePath(){
+		return this.labelFilePath;
+	}
+	public void setXmlId(int a){
+		this.xmlId=a;
+	}
+	public int getXmlId(){
+		return this.xmlId;
+	}
+	public void setInputData(InputData inputData) {
+		inputdata = inputData;
+	}
+
+	public InputData getInputData() {
+		return inputdata;
+	}
+	public ParentLabel getFromLabel()
+	{
+		return fromLabel;
+	}
+	public void setFromLabel(ParentLabel fromLabel)
+	{
+		this.fromLabel = fromLabel;
+	}
+
+	
+
+	public abstract int getLabelType();
+
+	
+
+	public abstract void run();
+	
+	
+	
+	public abstract int getColorType();
+	
+	public abstract String getType();
+	
+	public abstract String getExpainText();
+	public abstract void setExpainText(String expainText);
+	
+	
+	
+}

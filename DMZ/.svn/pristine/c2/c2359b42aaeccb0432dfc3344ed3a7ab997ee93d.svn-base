@@ -1,0 +1,33 @@
+package DMZ.gui;
+
+public abstract class OnlyInputLabel extends ParentLabel {
+
+	final int labelType = 3;
+	ParentLabel fromLabel;
+
+	OnlyInputLabel() {
+
+	}
+
+	OnlyInputLabel(String name) {
+		super(name);
+	}
+
+	OnlyInputLabel(String name, String type) {
+		super(name, type);
+	}
+
+	public int getLabelType() {
+		return labelType;
+	}
+
+	public void setFromLabel(ParentLabel fromLabel) {
+		this.fromLabel = fromLabel;
+	}
+
+	public ParentLabel getFromLabel() {
+		return fromLabel;
+	}
+
+	public abstract void run();
+}

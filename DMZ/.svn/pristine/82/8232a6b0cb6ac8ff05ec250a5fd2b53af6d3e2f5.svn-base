@@ -1,0 +1,76 @@
+package DMZ.gui;
+
+import java.awt.*;
+
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.border.EtchedBorder;
+
+
+public class MainFrame extends JFrame {
+	
+	//좌측  패널 
+	LeftPanel leftPanel = new LeftPanel(); 
+	//센터 패널 
+	CenterPanel centerPanel = new CenterPanel();
+	//우측 패널
+	RightPanel rightPanel = new RightPanel();
+	
+	weka.gui.LogPanel lp = new weka.gui.LogPanel();
+    
+	
+	
+	MainFrame()
+	{
+		
+		super("Data Mining Zoom");
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		getContentPane().setLayout(new BorderLayout());
+		
+		//좌측 패널 구성
+		
+		leftPanel.setBorder(new EtchedBorder());
+		leftPanel.setBackground(Color.white);
+		leftPanel.setPreferredSize(new Dimension(280,800));
+		leftPanel.setRightPanel(rightPanel);
+		
+		//센터 패널
+		centerPanel.setLayout(null);
+		centerPanel.setBorder(new EtchedBorder());
+		centerPanel.setPreferredSize(new Dimension(700,800));
+	
+		
+		//우측 패널
+	
+		rightPanel.setBorder(new EtchedBorder());
+		rightPanel.setPreferredSize(new Dimension(440,800));
+	
+		
+		leftPanel.setCenterPanel(centerPanel);
+		centerPanel.setRightPanel(rightPanel);
+		
+		add(leftPanel,BorderLayout.WEST);
+		add(centerPanel,BorderLayout.CENTER);
+		add(rightPanel,BorderLayout.EAST);
+		
+		try{
+		      UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+			  SwingUtilities.updateComponentTreeUI(this);
+		 }catch (Exception e){
+			                   
+		    }
+		setSize(1500,900);
+		setVisible(true);
+		
+			 
+		
+	}
+	public static void main(String[] args)
+	{
+	   new MainFrame();
+	}
+	
+	
+	
+}

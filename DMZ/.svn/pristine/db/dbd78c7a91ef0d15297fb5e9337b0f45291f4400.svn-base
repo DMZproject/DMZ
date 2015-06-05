@@ -1,0 +1,37 @@
+package DMZ.gui;
+
+import DMZ.inputdata.InputData;
+
+public class FilterLabel extends BothLabel{
+
+	boolean selected = false;
+	String algorithm;
+	int colorType=4;
+	String type = "filter";
+
+	FilterLabel(){
+
+	}
+
+	FilterLabel(String name) {
+		super(name);
+	}
+
+	
+	public int getColorType(){
+		return colorType;
+	}
+	public String getType() {
+		return type;
+	}
+	public void run() {
+		rightPanel.addPreprocessPanel(this);
+
+	}
+	public void setAlgorithm(String al){
+		this.algorithm=al;
+	}
+	public String getAlgorithm(){
+		return algorithm;
+	}
+}

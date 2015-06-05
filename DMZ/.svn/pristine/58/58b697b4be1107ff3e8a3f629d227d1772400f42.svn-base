@@ -1,0 +1,36 @@
+package DMZ.gui;
+
+import java.awt.Image;
+import java.util.ArrayList;
+
+import javax.swing.ImageIcon;
+
+import DMZ.inputdata.InputData;
+
+public class EditDataLabel extends BothLabel {
+
+	boolean selected = false;
+	int colorType=1;
+	String type = "edit";
+	ImageIcon enter_editImageIcon = new ImageIcon("IconImage/enter_editImageIcon.PNG");
+	EditDataLabel() {
+		enter_editImageIcon = new ImageIcon(enter_editImageIcon.getImage().getScaledInstance(70, 66, Image.SCALE_SMOOTH));
+		setIcon(enter_editImageIcon);
+	}
+
+	EditDataLabel(String name) {
+		super(name);
+	}
+
+
+	public int getColorType(){
+		return colorType;
+	}
+	public String getType() {
+		return type;
+	}
+	public void run() {
+		inputdata.edit();
+	}
+
+}

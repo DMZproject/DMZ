@@ -1,0 +1,38 @@
+package DMZ.xml;
+
+import DMZ.gui.ParentLabel;
+import DMZ.inputdata.InputData;
+
+public class XmlLabel {
+	private int x;
+	private int y;
+	private InputData inputData;
+	private String type;
+	
+	public void setXY(int x,int y){
+		this.x=x;
+		this.y=y;
+	}
+	public int getX(){
+		return x;
+	}
+	public int getY(){
+		return y;
+	}
+	/*
+	public void setInputData(InputData inputData){
+		this.inputData=inputData;
+	}
+	public InputData getInputData(){
+		return inputData;
+	}
+	*/
+	public void setType(String type){
+		this.type=type;
+	}
+	public String getType(){
+		return this.type;
+	}
+	
+
+}

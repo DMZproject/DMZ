@@ -1,0 +1,16 @@
+package DMZ.gui;
+
+import java.awt.Point;
+
+public class Line {
+	
+	
+	Point startP;
+	Point endP;
+	
+	Line(Point startP,Point endP)
+	{
+		this.startP = startP;
+		this.endP = endP;
+	}
+}

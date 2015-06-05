@@ -1,0 +1,1216 @@
+package DMZ.gui;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Image;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
+import java.awt.event.InputEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.WindowConstants;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.border.SoftBevelBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+import weka.core.Instances;
+import weka.core.converters.AbstractFileSaver;
+import weka.core.converters.ConverterUtils;
+import weka.core.converters.FileSourcedConverter;
+import DMZ.inputdata.InputData;
+import DMZ.xml.XmlLabel;
+import DMZ.xml.XmlLabelList;
+
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.xml.DomDriver;
+
+
+public class MainFrame extends JFrame {
+
+	//UndoRedo
+	ParentLabel dragLabel;
+	//좌측  패널 
+	LeftPanel leftPanel = new LeftPanel(); 
+	//센터 패널 
+	CenterPanel centerPanel = new CenterPanel();
+	//우측 패널
+	RightPanel rightPanel = new RightPanel();
+	JPanel mainPanel = new JPanel();
+
+
+	//설명 패널
+	JPanel southPanel = new JPanel();
+	JTextField explainText = new JTextField();
+	
+	int xmlId=0;
+
+	ParentLabel copyLabel;
+	Point ep;
+	Point mainEp;
+	boolean leftCheckDrag=false;
+
+	ExitDialog exitDialog=new ExitDialog();
+	String savePath=null;
+	int saveCheck=0;
+	MenuItemListener menuItemListener = new MenuItemListener();
+	//   LogPanel logPanel = new LogPanel(new WekaTaskMonitor());
+
+	MainFrame()
+	{
+		super("Data Mining Zoom");
+		
+
+
+		
+		getContentPane().setLayout(new BorderLayout());
+		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		add(mainPanel);
+		mainPanel.setLayout(new BorderLayout());
+
+
+
+
+		//좌측 패널 구성
+		LineBorder line = new LineBorder(new Color(217,229,255), 8, true);
+		LineBorder line2 = new LineBorder(new Color(218,217,255), 8, true);
+		LineBorder line3 = new LineBorder(new Color(232,217,255), 8, true);
+		SoftBevelBorder softbevel = new SoftBevelBorder(SoftBevelBorder.RAISED);
+
+
+
+		leftPanel.setBorder(new CompoundBorder(line, softbevel));
+		leftPanel.setBackground(Color.white);
+		leftPanel.setPreferredSize(new Dimension(280,600));
+		leftPanel.setRightPanel(rightPanel);
+
+
+
+
+		//센터 패널
+		centerPanel.setLayout(null);
+		centerPanel.setBorder(new EtchedBorder());
+		//centerPanel.setBorder(new CompoundBorder(line, softbevel));
+		//centerPanel.setPreferredSize(new Dimension(700,800));
+
+		//우측 패널
+
+		rightPanel.setBorder(new EtchedBorder());
+		rightPanel.setPreferredSize(new Dimension(460,800));
+		rightPanel.setBackground(Color.white);
+		//rightPanel.setBorder(new CompoundBorder(line3, softbevel));
+
+
+		leftPanel.setCenterPanel(centerPanel);
+		centerPanel.setRightPanel(rightPanel);
+		centerPanel.setLeftPanel(leftPanel);
+		centerPanel.setPreferredSize(new Dimension(1000,1000));
+		JScrollPane centerScrollPane = new JScrollPane(centerPanel);
+		
+		centerScrollPane.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener(){
+			public void adjustmentValueChanged(AdjustmentEvent  e){
+				leftPanel.setVerticalBar(((JScrollBar)e.getSource()).getValue());
+				
+			}
+		});
+		
+		centerScrollPane.getHorizontalScrollBar().addAdjustmentListener(new AdjustmentListener(){
+			public void adjustmentValueChanged(AdjustmentEvent  e){
+				leftPanel.setHorizontalBar(((JScrollBar)e.getSource()).getValue());
+			}
+		});
+		
+		//centerScrollPane.setBorder(new CompoundBorder(line2,softbevel));
+		centerPanel.addMouseListener(new CenterPanelClickListener());
+		centerPanel.addMouseMotionListener(new CenterPanelClickListener());
+
+		//설명 패널
+		
+		explainText.setFont(new Font("",4,13));
+		southPanel.setBorder(new EtchedBorder());
+		southPanel.setLayout(new BorderLayout());
+		southPanel.setPreferredSize(new Dimension(this.getWidth(),40));
+		southPanel.add(explainText);
+		southPanel.setBackground(Color.white);
+		
+		leftPanel.setExplainTextField(explainText);
+		centerPanel.setExplainTextField(explainText);
+		rightPanel.setExplainTextField(explainText);
+		
+		
+		mainPanel.add(southPanel,BorderLayout.SOUTH);
+		mainPanel.add(leftPanel,BorderLayout.WEST);
+		mainPanel.add(centerScrollPane,BorderLayout.CENTER);
+		mainPanel.add(rightPanel,BorderLayout.EAST);
+		//add(logPanel, BorderLayout.SOUTH);
+		createMenu();
+
+
+		try{
+			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+			SwingUtilities.updateComponentTreeUI(this);
+		}catch (Exception e){
+
+		}
+		//setResizable(false);
+
+		
+
+		setSize(1400,900);
+		setVisible(true);
+		
+		
+		addWindowListener(new java.awt.event.WindowAdapter() {
+			@Override
+			public void windowClosing(java.awt.event.WindowEvent e) {
+				if(centerPanel.getUndoRedoStack().canUndo())
+					exitDialog.setVisible(true);
+				else
+					System.exit(1);
+					
+			}
+		});
+
+		
+		
+		mainPanel.addMouseListener(new mainMouseListener());
+		mainPanel.addMouseMotionListener(new mainMouseListener());
+		
+	}/*
+	void addLogPanel(){
+
+		 String date = (new SimpleDateFormat("EEEE, d MMMM yyyy")).format(new Date());
+		    logPanel.logMessage("Weka Explorer");
+		    logPanel.logMessage("(c) " + Copyright.getFromYear() + "-"
+		      + Copyright.getToYear() + " " + Copyright.getOwner() + ", "
+		      + Copyright.getAddress());
+		    logPanel.logMessage("web: " + Copyright.getURL());
+		    logPanel.logMessage("Started on " + date);
+		    logPanel.statusMessage("Welcome to the Weka Explorer");
+
+
+	}*/
+	class mainMouseListener extends MouseAdapter{
+
+		@Override
+		public void mouseClicked(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseEntered(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseExited(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mousePressed(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseDragged(MouseEvent e) {
+			// TODO Auto-generated method stub
+			mainEp = e.getPoint();
+//			System.out.println("Main:" + mainEp);
+			if(leftPanel.getCheckDrag()){
+				leftCheckDrag=true;
+				
+			}
+		}
+
+		@Override
+		public void mouseMoved(MouseEvent e) {
+			// TODO Auto-generated method stub
+			mainEp = e.getPoint();
+//			System.out.println("Main:" + mainEp);
+		}
+		
+	}
+	class ExitDialog extends JDialog{
+		JButton saveBtn=new JButton("저장");
+		JButton cancelBtn=new JButton("취소");
+		JButton donSaveBtn=new JButton("저장 안함");
+		JLabel textLabel=new JLabel("      내용이 변경되었습니다.");
+		JLabel textLabel2 = new JLabel("저장하시겠습니까?");
+		JLabel warningLabel = new JLabel();
+		JLabel tmpLabel=new JLabel();
+		ImageIcon warningIcon = new ImageIcon("IconImage/warningIcon2.png");
+		
+		
+		//asdasdasd
+		
+		ExitDialog(){
+			setTitle("Confirm Exit");
+			warningIcon = new ImageIcon(warningIcon.getImage().getScaledInstance(50,50,  Image.SCALE_SMOOTH));
+			warningLabel.setIcon(warningIcon);
+			warningLabel.setSize(50, 50);
+			tmpLabel.setSize(30,30);
+			saveBtn.addActionListener(new ActionListener(){
+				public void actionPerformed(ActionEvent e){
+					saveCheck=0;
+					setVisible(false);
+					saveXML(savePath);
+					if(saveCheck==1)
+						exitFrame();
+					
+				}
+			});
+			cancelBtn.addActionListener(new ActionListener(){
+				public void actionPerformed(ActionEvent e){
+					setVisible(false);
+				}
+			});
+			donSaveBtn.addActionListener(new ActionListener(){
+				public void actionPerformed(ActionEvent e){
+					exitFrame();
+				}
+			});
+		   
+			
+			/*
+		    GridBagLayout gbL=new GridBagLayout();
+		    setLayout(gbL);
+		    GridBagConstraints gbC = new GridBagConstraints();
+		    gbC.gridx=2;
+		    gbC.gridy=0;
+		    gbC.insets = new Insets(7, 0 , 3, 0);
+		    gbL.setConstraints(textLabel, gbC);
+		    add(textLabel);
+		    
+		    gbC.gridx=2;
+		    gbC.gridy=1;
+		    gbL.setConstraints(textLabel2, gbC);
+		    add(textLabel2);
+		    
+		    gbC.gridx=0;
+		    gbC.gridy=0;
+		    gbL.setConstraints(warningLabel, gbC);
+		    add(warningLabel); 
+		    
+		    gbC.gridx=2;
+		    gbC.gridy=2;
+		    gbL.setConstraints(donSaveBtn, gbC);
+		    add(donSaveBtn);
+		    
+		    gbC.gridx=5;
+		    gbC.gridy=2;
+		    gbL.setConstraints(saveBtn, gbC);
+			add(saveBtn);
+			
+		    gbC.gridx=6;
+		    gbC.gridy=2;
+		    gbL.setConstraints(cancelBtn, gbC);
+			add(cancelBtn);
+			*/
+			setLayout(new BorderLayout());
+			JPanel n=new JPanel();
+			JPanel c=new JPanel();
+			JPanel s=new JPanel();
+			n.setLayout(new FlowLayout());
+			c.setLayout(new FlowLayout());
+			n.add(warningLabel);
+			n.add(textLabel);
+			add(n,BorderLayout.NORTH);
+			c.add(textLabel2);
+			add(c,BorderLayout.CENTER);
+			
+			
+			GridBagLayout gbL=new GridBagLayout();
+		    s.setLayout(gbL);
+		    GridBagConstraints gbC = new GridBagConstraints();
+		    gbC.gridx=0;
+		    gbC.gridy=0;
+		    gbC.insets = new Insets(0, 0 , 5, 40);
+		    gbL.setConstraints(donSaveBtn, gbC);
+		    donSaveBtn.setForeground(Color.red);
+		    s.add(donSaveBtn);
+		    
+		    gbC = new GridBagConstraints();
+		    gbC.insets = new Insets(0, 0 , 5, 0);
+		    gbC.gridx=2;
+		    gbC.gridy=0;
+		    gbL.setConstraints(saveBtn, gbC);
+		    s.add(saveBtn);
+		    
+		    
+		    
+		    gbC.gridx=3;
+		    gbC.gridy=0;
+		    gbL.setConstraints(cancelBtn, gbC);
+		    s.add(cancelBtn);
+		    
+		    
+			
+			add(s,BorderLayout.SOUTH);
+			
+			pack();
+			setSize(280,150);
+			setLocationRelativeTo(null);
+			setBackground(Color.WHITE);
+			
+		
+		}
+		
+	}
+	
+	
+	class CenterPanelClickListener extends MouseAdapter{
+
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			// TODO Auto-generated method stub
+			rightPanel.removeAll();
+			explainText.setText(null);
+			repaint();
+		}
+
+		@Override
+		public void mouseEntered(MouseEvent e) {
+
+
+
+		}
+
+		@Override
+		public void mouseExited(MouseEvent e) {
+			// TODO Auto-generated method stub
+			ep = null;
+
+		}
+
+		@Override
+		public void mousePressed(MouseEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent e) {
+			// TODO Auto-generated method stub
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void mouseDragged(MouseEvent e) {
+			// TODO Auto-generated method stub
+//			System.out.println("MainFrame EndPoint:"+ep);
+			ep = e.getPoint();
+		}
+
+		@Override
+		public void mouseMoved(MouseEvent e) {
+			// TODO Auto-generated method stub
+//			System.out.println("MainFrame EndPoint:"+ep);
+			ep = e.getPoint();
+			//System.out.println(ep);
+		}
+
+
+	}
+	void createMenu(){
+		JMenuBar menuBar = new JMenuBar();
+		
+		JMenu projectMenu = new JMenu("프로젝트");
+		
+		JMenuItem open=new JMenuItem("열기");
+		JMenuItem save=new JMenuItem("저장");
+		JMenuItem saveAs=new JMenuItem("다른 이름으로 저장");
+		JMenuItem newProj=new JMenuItem("새로 만들기");
+		JMenuItem exit = new JMenuItem("종료");
+
+		JMenu editMenu = new JMenu("편 집");
+				
+		JMenuItem undo = new JMenuItem("되돌리기");
+		JMenuItem redo = new JMenuItem("다시실행");
+		JMenuItem copy = new JMenuItem("복사");
+		JMenuItem paste = new JMenuItem("붙여넣기");
+		
+		JMenu helpMenu = new JMenu("도움말");
+		JMenuItem help = new JMenuItem("도움말");
+		JMenuItem info = new JMenuItem("프로그램 정보");
+
+		
+  
+		open.addMouseListener(menuItemListener);
+		save.addMouseListener(menuItemListener);
+		saveAs.addMouseListener(menuItemListener);
+		newProj.addMouseListener(menuItemListener);
+		undo.addMouseListener(menuItemListener);
+		redo.addMouseListener(menuItemListener);
+		copy.addMouseListener(menuItemListener);
+		paste.addMouseListener(menuItemListener);
+		exit.addMouseListener(menuItemListener);
+		
+		newProj.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				centerPanel.removeCenterPanel();
+			}
+		});
+		
+		
+		open.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				openXML(null);
+			}
+		});
+
+		save.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				saveXML(savePath);
+			}
+		});
+		saveAs.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				saveXML(null);
+			}
+		});
+		exit.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.exit(1);
+			}
+		});
+
+
+		undo.addActionListener(new ActionListener(){
+			UndoRedoStack undoRedoStack = centerPanel.getUndoRedoStack();
+			public void actionPerformed(ActionEvent e){
+				if(undoRedoStack.canUndo()){
+					undoAction(undoRedoStack);
+				}
+			}
+		});
+
+		redo.addActionListener(new ActionListener(){
+
+			UndoRedoStack undoRedoStack = centerPanel.getUndoRedoStack();
+			public void actionPerformed(ActionEvent e){
+				if(undoRedoStack.canRedo()){
+
+					redoAction(undoRedoStack); 
+				}
+			}
+
+		});
+
+		copy.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				copyLabel = centerPanel.getCopyLabel();
+
+			}
+		});
+
+		paste.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				pasteAction();
+			}
+
+		});
+		
+		help.addActionListener(new ActionListener(){
+
+			public void actionPerformed(ActionEvent e) {
+				try {
+					Runtime rt = Runtime.getRuntime();
+					rt.exec("explorer http://ec2-52-68-241-198.ap-northeast-1.compute.amazonaws.com/WEB/home.html");
+				} catch (Exception e1) {
+				e1.printStackTrace();
+				}
+				}
+			
+		});
+		
+		
+		info.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				ImageIcon img = new ImageIcon("IconImage/infoImage.png");
+				final Image img1 = img.getImage();
+				 JFrame jf = new JFrame("정보");
+				 JPanel jp = new JPanel(){
+					 public void paintComponent(Graphics g)
+					 {
+						 super.paintComponent(g);
+						 g.drawImage(img1, 0, 0, null);
+						 
+					 }
+				 };
+				
+				
+			     jf.getContentPane().add(jp,BorderLayout.CENTER);
+			     jf.pack();
+			     jf.setLocation(350, 250);
+			     jf.setSize(650, 500);
+			     jf.setVisible(true);
+			}
+			
+		});
+		
+		
+		editMenu.add(undo);
+		editMenu.add(redo);
+		editMenu.addSeparator();
+		editMenu.add(copy);
+		editMenu.add(paste);
+		
+		helpMenu.add(help);
+		helpMenu.addSeparator();
+		helpMenu.add(info);
+
+		undo.setAccelerator(KeyStroke.getKeyStroke('Z',InputEvent.CTRL_MASK));   //Ctrl+Z
+		redo.setAccelerator(KeyStroke.getKeyStroke('Y',InputEvent.CTRL_MASK));   //Ctrl+Y
+
+		copy.setAccelerator(KeyStroke.getKeyStroke('C',InputEvent.CTRL_MASK));   //Ctrl+C
+		paste.setAccelerator(KeyStroke.getKeyStroke('V',InputEvent.CTRL_MASK));   //Ctrl+v
+		
+		newProj.setAccelerator(KeyStroke.getKeyStroke('N',InputEvent.CTRL_MASK)); 
+		open.setAccelerator(KeyStroke.getKeyStroke('O',InputEvent.CTRL_MASK)); 
+		save.setAccelerator(KeyStroke.getKeyStroke('S',InputEvent.CTRL_MASK)); 
+		saveAs.setAccelerator(KeyStroke.getKeyStroke('A',InputEvent.CTRL_MASK)); 
+		
+		projectMenu.add(newProj);
+		projectMenu.add(open);
+		projectMenu.addSeparator(); 
+		projectMenu.add(save);
+		projectMenu.add(saveAs);
+		projectMenu.addSeparator(); 
+		projectMenu.add(exit);
+		menuBar.add(projectMenu);
+		menuBar.add(editMenu);
+		menuBar.add(helpMenu);
+		
+
+
+		// 메뉴바를 프레임에 삽입
+		setJMenuBar(menuBar);
+	}
+
+
+	//	private void copyAction()
+	//	{
+	//		ParentLabel la;
+	//		
+	//		for(int i =0 ; i<centerPanel.getNoneList().size() ;i++)
+	//		{
+	//			la = (ParentLabel) centerPanel.getNoneList().get(i);
+	//			if(la.selected==true)
+	//			{
+	//				centerPanel.copyLabel = la;
+	//				System.out.println(centerPanel.copyLabel.getClass().getName()+"  복사");
+	//			}
+	//		}
+	//	}
+	
+	
+	class MenuItemListener extends MouseAdapter{
+		JMenuItem menuItem;
+		public void mouseEntered(MouseEvent e) {
+			menuItem = (JMenuItem)e.getSource();
+			if(menuItem.getText()=="열기") explainText.setText("  기존의 프로젝트를 불러옵니다.");
+			else if(menuItem.getText()=="저장") explainText.setText("  현재 프로젝트를 저장합니다. ");
+			else if(menuItem.getText()=="다른 이름으로 저장") explainText.setText("  다른 이름으로 저장합니다. ");
+			else if(menuItem.getText()=="새로 만들기") explainText.setText("  새 프로젝트를 생섭합니다.  ");
+			else if(menuItem.getText()=="Undo") explainText.setText("  Undo");
+			else if(menuItem.getText()=="Redo") explainText.setText("  Redo");
+			else if(menuItem.getText()=="복사") explainText.setText("....복사합니다.");
+			else if(menuItem.getText()=="붙여넣기") explainText.setText("....붙여넣습니다.");
+			else if(menuItem.getText()=="닫기") explainText.setText(" 현재 프로젝트를 종료합니다.");
+			
+			
+			
+		
+		}
+
+		public void mouseExited(MouseEvent e) {
+		}
+	}
+	private void pasteAction()
+	{
+
+		ParentLabel pasteLabel = null;
+
+		if(copyLabel != null)
+		{
+
+			if (copyLabel.getType() == "open") {
+				pasteLabel = new InputDataLabel();
+				((ParentLabel) pasteLabel).setRightPanel(rightPanel);
+			}
+
+			else if (copyLabel.getType() == "edit") {
+				pasteLabel = new EditDataLabel();
+				((ParentLabel) pasteLabel).setRightPanel(rightPanel);
+			}
+
+			else if (copyLabel.getType() == "save") {
+				pasteLabel = new SaveDataLabel();
+				((ParentLabel) pasteLabel).setRightPanel(rightPanel);
+			}
+
+			else if (copyLabel.getType() == "histogram") {
+				pasteLabel = new HistogramLabel();
+				((ParentLabel) pasteLabel).setRightPanel(rightPanel);
+			}
+			else if (copyLabel.getType() == "scatterPlot") {
+				pasteLabel = new ScatterPlotLabel();
+				((ParentLabel) pasteLabel).setRightPanel(rightPanel);
+			}
+			else if (copyLabel.getText() == "Apriori") {
+				pasteLabel = new AssociationLabel();
+				((ParentLabel) pasteLabel).setRightPanel(rightPanel);
+				pasteLabel.setId(-1);
+				((AssociationLabel)pasteLabel).setAlgorithm("Apriori");
+			}
+			else if (copyLabel.getText() == "FPGrowth") {
+				pasteLabel = new AssociationLabel();
+				((ParentLabel) pasteLabel).setRightPanel(rightPanel);
+				pasteLabel.setId(-1);							
+				((AssociationLabel)pasteLabel).setAlgorithm("FPGrowth");
+			}
+			else if (copyLabel.getText() == "FilteredAssociator") {
+				pasteLabel = new AssociationLabel();
+				((ParentLabel) pasteLabel).setRightPanel(rightPanel);
+				pasteLabel.setId(-1);
+				((AssociationLabel)pasteLabel).setAlgorithm("FilteredAssociator");
+			}
+			else if (copyLabel.getType() == "analyze") {
+				pasteLabel = new AnalyzeLabel();
+				((ParentLabel)pasteLabel).setRightPanel(rightPanel);
+			}
+			else if (copyLabel.getText() == "cluster") {
+				pasteLabel= new ClusterLabel();
+				((ParentLabel) pasteLabel).setRightPanel(rightPanel);
+				copyLabel.setId(-1);
+			}
+			else if (copyLabel.getText() == "classify") {
+				pasteLabel = new ClassifyLabel();
+				((ParentLabel)pasteLabel).setRightPanel(rightPanel);
+				pasteLabel.setId(-1);
+			}
+			else if (copyLabel.getText() == "filter") {
+				pasteLabel = new FilterLabel();
+				((ParentLabel) pasteLabel).setRightPanel(rightPanel);
+				pasteLabel.setId(-1);
+			}
+
+			int tmpId;
+
+			pasteLabel.setText(copyLabel.getText());
+			pasteLabel.setIcon(copyLabel.getIcon());
+			pasteLabel.setSize(80, 78);
+			pasteLabel.setBorder(null);
+			pasteLabel.setXmlId(leftPanel.xmlId++);
+
+
+
+			if(copyLabel.getInputData()!=null)
+				pasteLabel.setInputData(copyLabel.getInputData());
+
+
+			System.out.println(pasteLabel.getClass().getName()+"  붙여넣기");
+			centerPanel.addLabel(pasteLabel);
+			if(ep!=null){
+				pasteLabel.setLocation(ep);
+			}
+			System.out.println(pasteLabel.getXmlId());
+		}
+
+	}
+	private void redoAction(UndoRedoStack undoRedoStack){
+		ParentLabel pl;
+		ParentLabel fromLabel;
+		undoRedoStack.redo();
+		Object action = undoRedoStack.popUndoStack();
+		if(action.equals("push")){
+			pl = (ParentLabel)undoRedoStack.popValue();
+			undoRedoStack.push(pl);
+			centerPanel.add(pl);
+			centerPanel.getXmlList().add(pl);
+			centerPanel.getXmlList().add(pl);
+			centerPanel.getNoneList().add(pl);
+			centerPanel.setNoneCount("+");
+			centerPanel.repaint();
+		}else if(action.equals("pushMove")){
+			int releasedpointY = (int) undoRedoStack.popMove();
+			int releasedpointX = (int) undoRedoStack.popMove();
+			int pointY = (int)undoRedoStack.popMove();
+			int pointX = (int)undoRedoStack.popMove();
+			pl = (ParentLabel) undoRedoStack.popMove();
+			//			centerPanel.getUndoRedoStack().popMove1();
+			pl.setLocation(releasedpointX, releasedpointY);
+			undoRedoStack.pushMove(pl, pointX, pointY,releasedpointX,releasedpointY);
+			centerPanel.repaint();
+		}else if(action.equals("pushRemove")){
+			pl = (ParentLabel) undoRedoStack.popValue();
+			undoRedoStack.pushRemove(pl);
+			centerPanel.getNoneList().remove(pl);
+			centerPanel.setNoneCount("-");
+			centerPanel.getXmlList().remove(pl);
+			centerPanel.remove(pl);
+			centerPanel.repaint();
+		}else if(action.equals("pushRemoveHasFrom")){
+			pl = (ParentLabel)undoRedoStack.popRemove();
+			fromLabel = (ParentLabel)undoRedoStack.popRemove();
+			centerPanel.getFromList().remove(fromLabel);
+			centerPanel.getToList().remove(pl);
+			centerPanel.getXmlList().remove(pl);
+			centerPanel.remove(pl);
+			centerPanel.setMaxCount("-");
+			undoRedoStack.pushRemove(fromLabel,pl);
+			centerPanel.repaint();
+		}else if(action.equals("pushSetLine")){
+			pl = (ParentLabel)undoRedoStack.popValue();
+			fromLabel = (ParentLabel)undoRedoStack.popValue();
+			centerPanel.returnRemoveLabelForUndo(fromLabel, pl);
+			undoRedoStack.pushSetLine(fromLabel,pl);
+			centerPanel.repaint();
+		}
+	}
+	private void undoAction(UndoRedoStack undoRedoStack){
+		ParentLabel pl;
+		ParentLabel fromLabel;
+		Object action = undoRedoStack.popUndoStack();
+		if(action.equals("pushMove")){
+			int releasedpointY = (int) undoRedoStack.popMove();
+			int releasedpointX = (int) undoRedoStack.popMove();
+			int pointY = (int)undoRedoStack.popMove();
+			int pointX = (int)undoRedoStack.popMove();
+			pl = (ParentLabel) undoRedoStack.popMove();
+			//			centerPanel.getUndoRedoStack().popMove1();
+			pl.setLocation(pointX, pointY);
+			undoRedoStack.pushMove(pl, pointX, pointY,releasedpointX,releasedpointY);
+			centerPanel.repaint();
+		}else if(action.equals("pushRemoveHasFrom")){
+			pl = (ParentLabel)undoRedoStack.popRemove();
+			fromLabel = (ParentLabel)undoRedoStack.popRemove();
+			centerPanel.getFromList().add(fromLabel);
+			centerPanel.getToList().add(pl);
+			centerPanel.add(pl);
+			centerPanel.getXmlList().add(pl);
+			centerPanel.setMaxCount("+");
+			undoRedoStack.pushRemove(fromLabel,pl);
+			centerPanel.repaint();
+		}else if(action.equals("pushRemove")){
+			pl = (ParentLabel)undoRedoStack.popRemove();
+			centerPanel.getNoneList().add(pl);
+			centerPanel.setNoneCount("+");
+			centerPanel.add(pl);
+			centerPanel.getXmlList().add(pl);
+			undoRedoStack.pushRemove(pl);	
+			centerPanel.repaint();
+		}else if(action.equals("push")){
+			pl = (ParentLabel)undoRedoStack.popValue();
+			undoRedoStack.push(pl);
+			centerPanel.getNoneList().remove(pl);
+			centerPanel.getXmlList().remove(pl);
+			centerPanel.setNoneCount("-");
+			centerPanel.remove(pl);
+			centerPanel.repaint();
+		}else if(action.equals("pushSetLine")){
+			pl = (ParentLabel)undoRedoStack.popValue();
+			fromLabel = (ParentLabel)undoRedoStack.popValue();
+			centerPanel.removeLabelsForUndo(fromLabel, pl);
+			undoRedoStack.pushSetLine(fromLabel,pl);
+			centerPanel.repaint();
+		}
+		else{
+
+		}
+
+		undoRedoStack.undo();
+
+	}
+
+
+	public void saveXML(String savepath){
+		String pathName;
+		if(savepath==null){
+			JFileChooser chooser=new JFileChooser();
+			FileNameExtensionFilter filter= new FileNameExtensionFilter("xml","xml");
+			chooser.setFileFilter(filter);
+			int ret=chooser.showSaveDialog(null);
+
+			String fileName;
+
+			if(ret==JFileChooser.APPROVE_OPTION){
+				pathName=chooser.getSelectedFile().getPath();
+				fileName=chooser.getSelectedFile().getName();
+				setSavePath(pathName);
+			}
+			else{
+				System.out.println("file save error");
+				exitDialog.setVisible(false);
+				return ;
+				
+			}
+		}
+		else
+			pathName=savepath;
+
+		saveCheck=1;
+		System.out.println(pathName);
+		int beginIndex=0;
+		if(pathName.length()>3){
+			beginIndex=pathName.length()-4;
+			if(pathName.substring(beginIndex).equals(".xml")){}
+			else
+				pathName=pathName+".xml";
+		}
+		else
+			pathName=pathName+".xml";
+
+
+
+
+
+		XmlLabelList save_List=new XmlLabelList();
+		ArrayList<ParentLabel> tmpList=this.centerPanel.getXmlList();
+		ArrayList<ParentLabel> fromList=this.centerPanel.getFromList();
+		ArrayList<ParentLabel> toList=this.centerPanel.getToList();
+		ArrayList<ParentLabel> noneList=this.centerPanel.getNoneList();
+
+
+		System.out.println("@@@"+this.centerPanel.getXmlList().size());
+		System.out.println(this.centerPanel.getFromList().size());
+		System.out.println(this.centerPanel.getToList().size());
+		System.out.println(this.centerPanel.getNoneList().size()+"@@@");
+
+		for(int i=0; i<tmpList.size();i++){
+			System.out.println(tmpList.get(i).getLocation());
+			Point p=new Point(tmpList.get(i).getLocation());
+			XmlLabel xla=new XmlLabel();
+			xla.setXY(p.x,p.y);
+			xla.setType(tmpList.get(i).getType());
+			xla.setName(tmpList.get(i).getName());
+			if(tmpList.get(i).getLabelFilePath()==null)
+				xla.setPath(null);
+			else{
+				if(tmpList.get(i).getType()=="edit" || tmpList.get(i).getType()=="filter")
+					saveChanged(tmpList.get(i).getInputData(),tmpList.get(i).getLabelFilePath());
+				xla.setPath(tmpList.get(i).getLabelFilePath());
+			}
+
+			for(int j=0;j<fromList.size();j++){
+				if(fromList.get(j).getXmlId()==tmpList.get(i).getXmlId()){
+					xla.setFrom("from");
+					if(xla.getFromIndex()==null)
+						xla.setFromIndex(((Integer)j).toString());
+					else
+						xla.setFromIndex(xla.getFromIndex().concat(((Integer)j).toString()));
+				}
+			}
+			
+			for(int j=0;j<toList.size();j++){
+				if(toList.get(j).getXmlId()==tmpList.get(i).getXmlId()){
+					xla.setTo("to");
+					if(xla.getToIndex()==null)
+						xla.setToIndex(((Integer)j).toString());
+					else
+						xla.setToIndex(xla.getToIndex().concat(((Integer)j).toString()));
+				}
+			}
+			for(int j=0;j<noneList.size();j++){
+				if(noneList.get(j).getXmlId()==tmpList.get(i).getXmlId())
+					xla.setNone("none");
+
+			}
+			for(int j=0;j<tmpList.size();j++){
+					System.out.println(tmpList.get(i).getName());
+			}
+
+			save_List.add(xla);
+		}
+		XStream xs = new XStream(new DomDriver());
+
+		xs.alias("label", XmlLabel.class);
+		xs.alias("labels", XmlLabelList.class);
+		xs.addImplicitCollection(XmlLabelList.class, "x_List");
+
+		try {
+			FileOutputStream fs = new FileOutputStream(pathName);
+			xs.toXML(save_List, fs);
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		}
+		
+
+
+	}
+	public void openXML(String path){
+		xmlId=0;
+
+		this.rightPanel.removeAll();
+		String pathName;
+
+		if(path==null){
+
+			JFileChooser chooser=new JFileChooser();
+			FileNameExtensionFilter filter= new FileNameExtensionFilter("xml","xml");
+			chooser.setFileFilter(filter);
+			int ret=chooser.showOpenDialog(null);
+			String fileName;
+
+			if(ret==JFileChooser.APPROVE_OPTION){
+				pathName=chooser.getSelectedFile().getPath();
+				fileName=chooser.getSelectedFile().getName();	
+			}
+			else{
+				System.out.println("file open error");
+				return ;
+			}
+			System.out.println(pathName);
+
+		}
+		else
+			pathName=path;
+
+
+		this.centerPanel.init();
+		this.centerPanel.removeAll();
+
+		XmlLabelList open_List=new XmlLabelList();
+		XStream xs = new XStream(new DomDriver());
+		try {
+
+			FileInputStream fis = new FileInputStream(pathName);
+			xs.alias("label", XmlLabel.class);
+			xs.alias("labels", XmlLabelList.class);
+			xs.addImplicitCollection(XmlLabelList.class, "x_List");
+
+
+			xs.fromXML(fis,open_List);
+
+			System.out.println(fis.toString());
+			System.out.println(open_List.getXmlLabelList().size());
+
+
+
+			ArrayList<ParentLabel> fromList = new ArrayList<ParentLabel>();
+			ArrayList<ParentLabel> toList = new ArrayList<ParentLabel>();
+			ArrayList<ParentLabel> noneList = new ArrayList<ParentLabel>();
+			ArrayList<ParentLabel> xmlList=new ArrayList<ParentLabel>();
+
+			centerPanel.setXmlList(xmlList);
+
+
+			HashMap<String,ParentLabel> toMap=new HashMap<String,ParentLabel>();
+			HashMap<String,ParentLabel> fromMap=new HashMap<String,ParentLabel>();
+
+
+
+			for(int i=0;i<open_List.getXmlLabelList().size();i++){
+
+				XmlLabel la=(XmlLabel)open_List.getXmlLabelList().get(i);
+				ParentLabel pla=createLabel(la);
+				pla.setLocation(la.getX(),la.getY());
+				pla.setLabelFilePath(la.getPath());
+				pla.setRightPanel(rightPanel);
+				InputData inputData=pla.getInputData();
+				System.out.println(la.getPath());
+				if(la.getPath()!=null){
+
+					inputData.setFilePath(la.getPath());
+					inputData.getFileChooser().setFromFile(la.getPath());
+					try {
+						inputData.setInstances(inputData.getFileChooser().getLoader().getDataSet());
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+				pla.setXmlId(xmlId++);
+				if(pla.getIcon()==null)
+					pla.setText(la.getType());	//나중에 이미지 입히고 지우면 됨 라벨오른쪽에 점없어짐
+				pla.setSize(84, 99);
+				pla.setBorder(null);
+
+
+
+
+				if(la.getFrom()!=null &&la.getFrom().equals("from")){
+					System.out.println(la.getFrom());
+					System.out.println(la.getFromIndex());
+					if(la.getFromIndex().length()==1)
+						fromMap.put(la.getFromIndex().toString(), pla);
+					else{
+						for(int k=0;k<la.getFromIndex().length();k++)
+							fromMap.put(((Character)la.getFromIndex().charAt(k)).toString(), pla);
+					}
+				}
+				if(la.getTo()!=null && la.getTo().equals("to")){
+					if(la.getToIndex().length()==1)
+						toMap.put(la.getToIndex().toString(), pla);
+					else{
+						for(int k=0;k<la.getToIndex().length();k++)
+							toMap.put(((Character)la.getToIndex().charAt(k)).toString(), pla);
+					}
+				}
+
+				if(la.getNone()!=null &&la.getNone().equals("none"))
+					noneList.add(pla);
+
+
+
+
+				centerPanel.addLabel2(pla);
+
+
+			}
+			for(Integer k=0;k<fromMap.size();k++){
+				fromList.add(fromMap.get(k.toString()));
+			}
+			for(Integer k=0;k<toMap.size();k++){
+				toList.add(toMap.get(k.toString()));
+			}
+
+
+
+			centerPanel.setFromList(fromList);
+			centerPanel.setToList(toList);
+			centerPanel.setNoneList(noneList);
+			centerPanel.setNoneCount(noneList.size());
+			centerPanel.setMaxCount(fromList.size());
+			centerPanel.repaint();
+			leftPanel.setXmlId(xmlId);
+			centerPanel.getUndoRedoStack().init();
+
+
+
+
+		} catch (FileNotFoundException ex) {
+			ex.printStackTrace();
+		}
+
+
+	}
+	public ParentLabel createLabel(XmlLabel la){
+		ParentLabel pla;
+		switch(la.getType()){
+		case "open":
+			pla=new InputDataLabel();
+			break;
+		case "edit":
+			pla=new EditDataLabel();
+			break;
+		case "save":
+			pla=new SaveDataLabel();
+			break;
+		case "histogram":
+			pla=new HistogramLabel();
+			break;
+		case "scatterPlot":
+			pla=new ScatterPlotLabel();
+			break;
+		case "association":
+			pla=new AssociationLabel(la.getName());
+			break;
+		case "classify":
+			pla=new ClassifyLabel(la.getName());
+			break;
+		case "cluster":
+			pla=new ClusterLabel(la.getName());
+			break;
+		case "filter":
+		{
+			pla=new FilterLabel(la.getName());
+			break;
+		}
+		default:
+			pla=null;
+			break;
+		}
+		if(la.getPath()!=null && la.getType()!="open"){
+			InputData inputData=new InputData();
+			pla.setInputData(inputData);
+		}
+
+		return pla;
+
+	}
+	public void saveChanged(InputData inputdata ,String path){
+
+		File currFile;
+		Object m_CurrentConverter = ConverterUtils.getSaverForFile(path);
+		Instances inst = new Instances(inputdata.getInstances());
+		inst.setClassIndex(inputdata.getHistogram().getAttVisualizePanel().getColoringIndex());
+		try {
+			currFile = ((FileSourcedConverter) m_CurrentConverter).retrieveFile();
+			if ((currFile == null) || (!currFile.getAbsolutePath().equals(path))) {
+				((FileSourcedConverter) m_CurrentConverter).setFile(new File(path));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		inputdata.saveInstancesToFile((AbstractFileSaver)m_CurrentConverter , inst);
+
+
+	}
+	public void setSavePath(String path){
+		this.savePath=path;
+	}
+	public void exitFrame(){
+		this.dispose();
+		System.exit(0);
+	}
+	public void setOpenProject(String path){
+		openXML(path);
+	}
+	
+	public static void main(String[] args)
+	{
+		new MainFrame();
+		
+	}
+	
+
+
+}
